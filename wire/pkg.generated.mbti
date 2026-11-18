@@ -10,6 +10,8 @@ pub fn agent_urn_prefix() -> String
 
 pub fn aip_protocol_name() -> String
 
+pub fn bytes_hex(Bytes) -> String
+
 pub fn envelope_version() -> String
 
 pub fn group_urn_prefix() -> String

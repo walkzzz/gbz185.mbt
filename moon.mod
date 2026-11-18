@@ -8,4 +8,5 @@ repository = "https://github.com/walkzzz/gbz185.mbt"
 
 import {
   "moonbitlang/async@0.22.9",
+  "cc06b/mooncry@0.95.0",
 }

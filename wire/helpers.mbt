@@ -119,3 +119,21 @@ pub fn seed32_bytes(s : String) -> Bytes {
   }
   Bytes::from_array(out)
 }
+
+///|
+fn hex_digit(v : Int32) -> Char {
+  // v ∈ [0,15] 保证 ASCII 安全，to_char() 恒返回 Some
+  (if v < 10 { 48 + v } else { 87 + v }).to_char().unwrap()
+}
+
+///|
+/// Bytes → 小写 hex 字符串（证书指纹编码用）
+pub fn bytes_hex(b : Bytes) -> String {
+  let buf = StringBuilder()
+  for i in 0..<b.length() {
+    let v = b[i].to_int()
+    buf.write_char(hex_digit(v / 16))
+    buf.write_char(hex_digit(v % 16))
+  }
+  buf.to_string()
+}
