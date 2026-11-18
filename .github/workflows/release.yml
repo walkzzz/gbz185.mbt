@@ -7,6 +7,9 @@ on:
         description: "Type RELEASE to confirm publishing"
         required: true
 
+env:
+  MOONBIT_VERSION: 0.1.20261104
+
 jobs:
   publish:
     name: moon publish (walkzzz/gbz185.mbt)
@@ -16,8 +19,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install MoonBit
         run: |
-          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "$MOONBIT_VERSION"
           echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+      - name: moon update
+        run: moon update
       - name: moon check --deny-warn --target all (gate)
         run: moon check --deny-warn --target all
       - name: moon test
