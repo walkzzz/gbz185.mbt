@@ -13,6 +13,8 @@ import {
 // Values
 pub fn envelope_version() -> String
 
+pub fn fanout(AipEnvelope, ArrayView[String]) -> Array[AipEnvelope]
+
 pub fn generate_dispatch_envelopes(AipProtocol, Int32, Int32) -> Array[AipEnvelope]
 
 pub fn generate_mutated_envelope(AipEnvelope, Int32) -> AipEnvelope
@@ -93,6 +95,27 @@ pub fn AipProtocol::self_urn(Self) -> String
 pub fn AipProtocol::to_repr(Self) -> @debug.Repr
 
 #derive(Eq, @debug.Debug)
+pub struct AipSession {
+  session_id : String
+  self_urn : String
+  peer_urn : String
+  mut state : SessionState
+  mut outbox_seq : Int64
+  mut inbox_seq : Int64
+  mut message_count : Int32
+}
+pub fn AipSession::close(Self) -> Unit
+pub fn AipSession::equal(Self, Self) -> Bool
+pub fn AipSession::inbox_watermark(Self) -> Int64
+pub fn AipSession::is_active(Self) -> Bool
+pub fn AipSession::message_count(Self) -> Int32
+pub fn AipSession::not_equal(Self, Self) -> Bool
+pub fn AipSession::open(String, String, String) -> Self
+pub fn AipSession::recv(Self, AipEnvelope) -> AipMessage raise AipError
+pub fn AipSession::send(Self, MessageKind, @json.Json) -> AipEnvelope raise AipError
+pub fn AipSession::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug)
 pub(all) struct CapabilityRequest {
   requester_urn : String
   target_urn : String
@@ -158,6 +181,52 @@ pub fn RegisterResponse::from_json(@json.Json) -> Self raise @wire.JsonWireError
 pub fn RegisterResponse::not_equal(Self, Self) -> Bool
 pub fn RegisterResponse::to_json(Self) -> @json.Json
 pub fn RegisterResponse::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug)
+pub(all) enum RouteDecision {
+  Direct(String)
+  Fanout(Array[String])
+  Reject(String)
+}
+pub fn RouteDecision::equal(Self, Self) -> Bool
+pub fn RouteDecision::not_equal(Self, Self) -> Bool
+pub fn RouteDecision::to_repr(Self) -> @debug.Repr
+
+#derive(@debug.Debug)
+pub struct RouteTable {
+  groups : Map[String, Array[String]]
+  peers : Map[String, String]
+}
+pub fn RouteTable::add_group(Self, String) -> Unit
+pub fn RouteTable::add_peer(Self, String, String) -> Unit
+pub fn RouteTable::group_count(Self) -> Int32
+pub fn RouteTable::join(Self, String, String) -> Unit
+pub fn RouteTable::leave(Self, String, String) -> Bool
+pub fn RouteTable::members(Self, String) -> Array[String]
+pub fn RouteTable::new() -> Self
+pub fn RouteTable::peer_endpoint(Self, String) -> String?
+pub fn RouteTable::resolve(Self, String) -> RouteDecision
+pub fn RouteTable::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug)
+pub(all) enum RouteTarget {
+  Unicast(String)
+  Group(String)
+  Unknown
+}
+pub fn RouteTarget::classify(String, String) -> Self
+pub fn RouteTarget::equal(Self, Self) -> Bool
+pub fn RouteTarget::not_equal(Self, Self) -> Bool
+pub fn RouteTarget::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug)
+pub(all) enum SessionState {
+  Open
+  Closed
+}
+pub fn SessionState::equal(Self, Self) -> Bool
+pub fn SessionState::not_equal(Self, Self) -> Bool
+pub fn SessionState::to_repr(Self) -> @debug.Repr
 
 // Type aliases
 

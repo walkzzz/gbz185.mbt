@@ -1,0 +1,12 @@
+import {
+  "moonbitlang/async/socket",
+  "moonbitlang/core/json",
+  "walkzzz/gbz185.mbt/aip",
+}
+
+import {
+  "walkzzz/gbz185.mbt/discovery",
+  "walkzzz/gbz185.mbt/identity",
+} for "test"
+
+supported_targets = "native"
