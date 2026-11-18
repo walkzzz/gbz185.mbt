@@ -4,6 +4,8 @@ version = "0.1.0"
 
 license = "MIT"
 
+readme = "README.md"
+
 repository = "https://github.com/walkzzz/gbz185.mbt"
 
 import {

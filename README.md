@@ -3,7 +3,7 @@
 <p align="left">
   <a href="https://github.com/walkzzz/gbz185.mbt/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
   <img alt="MoonBit" src="https://img.shields.io/badge/MoonBit-%E6%9C%88%E5%85%94-purple">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-47%2F47%20passing-brightgreen">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-77%2F77%20passing-brightgreen">
   <img alt="Targets" src="https://img.shields.io/badge/targets-native%7Cjs%7Cwasm%7Cwasm--gc-orange">
   <img alt="Standard" src="https://img.shields.io/badge/GB%2FZ%20185--2026-%E6%99%BA%E8%83%BD%E4%BD%93%E4%BA%92%E8%81%94-red">
 </p>
@@ -14,7 +14,23 @@
 
 MoonBit 实现的 **GB/Z 185-2026《人工智能 智能体互联》国家标准指导性技术文件协议栈**（第 1-7 部分），从 agentskills 运行时移植项目中抽取的独立、可复用协议资产。零第三方运行时依赖（核心包仅依赖 MoonBit 核心库），四目标编译（native/js/wasm/wasm-gc）。
 
-## 国标协议栈
+## 协议栈总览
+
+```
+             GB/Z 185-2026 协议栈（自上而下调用）
+ ──────────────────────────────────────────────────────
+  GB/Z 185.7   tooling/      ToolDescriptor 单源模型 · ToolRegistry
+  GB/Z 185.6   aip/          AIP 信封 · 会话 · 群组路由 · FakeTransport
+  GB/Z 185.5   discovery/    ADP 发现 · AgentNode · match_nodes
+  GB/Z 185.4   capability/   ACS 能力集 · covers 覆盖判断
+  GB/Z 185.3   registry/     ATR 注册表 · 鉴权 · 生命周期 · 审计
+  GB/Z 185.2   identity/     AIC 身份码逐字符校验
+  GB/Z 185.1   (根包)        arch 双模式 · 全局模型 · 互联角色
+ ──────────────────────────────────────────────────────
+  公共层       wire/         ProtocolError 特征 · JSON 编解码
+               transport_async/   TCP NDJSON · TLS 指纹钉扎
+               verify/       moon prove 形式化验证（Z3）
+```
 
 | 部分 | 包 | 内容 | 状态 |
 | --- | --- | --- | --- |
@@ -23,10 +39,10 @@ MoonBit 实现的 **GB/Z 185-2026《人工智能 智能体互联》国家标准�
 | GB/Z 185.3 | `registry/` | 身份管理 **ATR**（Agent Token Registry）：注册（AIC 分配）、凭证、鉴权（CAIVerifier 注入）、生命周期（lock/revoke）、注销 | ✅ |
 | GB/Z 185.4 | `capability/` | 智能体描述 **ACS**（Agent Capability Statement）：能力元数据、输入输出类型、约束（constraints）、匹配原语 | ✅ |
 | GB/Z 185.5 | `discovery/` | 智能体发现 **ADP**（Agent Discovery Protocol）：检索、能力匹配、`discoverable` 可见性过滤 | ✅ |
-| GB/Z 185.6 | `aip/` | 智能体交互 **AIP**（Agent Interconnection Protocol）：报文信封、单调序号防重放、群组 URN 路由、FakeTransport（sans-I/O） | ✅ 核心完成，transport-async 于 W12 |
-| GB/Z 185.7 | `tooling/` | 智能体工具调用：`ToolDescriptor` 单源模型、调用流程、绑定契约（ToolCallable） | ✅ 模型完成 |
+| GB/Z 185.6 | `aip/` | 智能体交互 **AIP**（Agent Interconnection Protocol）：报文信封、单调序号防重放、群组 URN 路由、FakeTransport（sans-I/O） | ✅（MQ 分发与国密于 0.2.0） |
+| GB/Z 185.7 | `tooling/` | 智能体工具调用：`ToolDescriptor` 单源模型、调用流程、绑定契约（ToolCallable） | ✅ |
 
-公共层：`wire/`（**ProtocolError** 统一错误特征 + JSON 编解码工具 + 信封常量）、`transport-async/`（传输扩展，W12：@socket/@tls/MQ）、`verify/`（`proof_enabled` 形式化验证，证明义务由 SMT 机器可查）。
+公共层：`wire/`（**ProtocolError** 统一错误特征 + JSON 编解码工具 + 信封常量）、`transport_async/`（传输扩展：TCP NDJSON + TLS 对端指纹钉扎，MQ 分发于 0.2.0）、`verify/`（`proof_enabled` 形式化验证：`clamp_i64` / `next_seq` / `inbox_advance` 三命题经 moon prove 证明，证明义务由 SMT 机器可查）。
 
 ## 安装
 
@@ -51,6 +67,22 @@ let env = @aip.AipProtocol::dispatch(
   proto, @aip.Event, "urn:agent:group:ops", ("hello" : Json),
 )
 ```
+
+## API 速览
+
+| 任务 | 入口 |
+| --- | --- |
+| 身份码校验（185.2） | `@identity.aic_validate` · `AgentIdentity::from_json` |
+| 注册 / 鉴权 / 生命周期（185.3） | `@registry.TokenRegistry::register` → `authenticate` → `lock / revoke / renew` |
+| 能力描述与覆盖判断（185.4） | `@capability.AgentCapabilitySet::covers` |
+| 智能体发现与匹配（185.5） | `@discovery.AgentNode::from_frontmatter` · `match_nodes` |
+| 交互收发（185.6） | `@aip.AipProtocol::dispatch / receive` · `AipSession::send / recv` |
+| 群组路由与扇出 | `@aip.RouteTable::add_group` · `fanout` |
+| 信封 JSON 编解码 | `@aip.AipEnvelope::to_json / from_json` |
+| 工具单源模型（185.7） | `@tooling.ToolDescriptor::validate` · `ToolRegistry::invoke_tool` · `to_mcp_entry` |
+| 统一错误契约 | `@wire.ProtocolError` 特征（全栈 suberror 分型） |
+| 传输扩展 | `@transport_async.TcpChannel` · `TlsTcpChannel` · `ndjson_encode / ndjson_decode` |
+| 形式化验证 | `@verify.clamp_i64 / next_seq / inbox_advance` |
 
 ## 质量门禁
 
@@ -103,6 +135,22 @@ MoonBit implementation of the **GB/Z 185-2026 "AI Agent Interconnection" nationa
 
 ### Stack
 
+```
+             GB/Z 185-2026 protocol stack (top-down calls)
+ ──────────────────────────────────────────────────────
+  GB/Z 185.7   tooling/      ToolDescriptor single source · ToolRegistry
+  GB/Z 185.6   aip/          AIP envelope · session · group routing · FakeTransport
+  GB/Z 185.5   discovery/    ADP discovery · AgentNode · match_nodes
+  GB/Z 185.4   capability/   ACS capability set · covers
+  GB/Z 185.3   registry/     ATR registry · auth · lifecycle · audit
+  GB/Z 185.2   identity/     AIC per-character validation
+  GB/Z 185.1   (root)        arch dual-mode · global model · interconnect roles
+ ──────────────────────────────────────────────────────
+  Common       wire/         ProtocolError trait · JSON codecs
+               transport_async/   TCP NDJSON · TLS fingerprint pinning
+               verify/       moon prove formal verification (Z3)
+```
+
 | Part | Package | Content | Status |
 | --- | --- | --- | --- |
 | GB/Z 185.1 | `arch.mbt` (root) | Overall architecture: dual mode (local/interconnect), global model, interconnect roles | ✅ |
@@ -110,10 +158,10 @@ MoonBit implementation of the **GB/Z 185-2026 "AI Agent Interconnection" nationa
 | GB/Z 185.3 | `registry/` | **ATR**: register (AIC assignment), credentials, authentication (CAIVerifier injection), lifecycle, unregister | ✅ |
 | GB/Z 185.4 | `capability/` | **ACS**: capability metadata, input/output types, constraints, match primitive | ✅ |
 | GB/Z 185.5 | `discovery/` | **ADP**: search, capability matching, `discoverable` visibility filtering | ✅ |
-| GB/Z 185.6 | `aip/` | **AIP**: envelope, monotonic-sequence anti-replay, group URN routing, FakeTransport (sans-I/O) | ✅ core done, transport-async at W12 |
-| GB/Z 185.7 | `tooling/` | Tool invocation: `ToolDescriptor` single-source model, invocation flow, binding contract | ✅ model done |
+| GB/Z 185.6 | `aip/` | **AIP**: envelope, monotonic-sequence anti-replay, group URN routing, FakeTransport (sans-I/O) | ✅ (MQ & SM-suite at 0.2.0) |
+| GB/Z 185.7 | `tooling/` | Tool invocation: `ToolDescriptor` single-source model, invocation flow, binding contract | ✅ |
 
-Common layers: `wire/` (**ProtocolError** unified error trait + JSON helpers + envelope constants), `transport-async/` (W12: @socket/@tls/MQ), `verify/` (`proof_enabled` formal verification, machine-checkable proof obligations).
+Common layers: `wire/` (**ProtocolError** unified error trait + JSON helpers + envelope constants), `transport_async/` (transport extension: TCP NDJSON + TLS peer fingerprint pinning, MQ at 0.2.0), `verify/` (`proof_enabled` formal verification: `clamp_i64` / `next_seq` / `inbox_advance` proved via moon prove, machine-checkable SMT obligations).
 
 ### Install
 
@@ -122,14 +170,69 @@ moon add walkzzz/gbz185.mbt
 moon update
 ```
 
+### Quick start
+
+```moonbit
+// GB/Z 185.5: build an agent node (AGENTS.md frontmatter mapping)
+let node = @discovery.AgentNode::from_frontmatter(
+  "urn:agent:walkzzz:node-1", "demo-agent", @identity.NoIdentity, true,
+  ["skill:demo"], ["text"], ["text"],
+)
+let proto = @aip.AipProtocol::new(node)
+
+// GB/Z 185.3: register -> activate (AIC assigned & validated by the registry)
+// GB/Z 185.6: interact — group URN routing, monotonic-sequence anti-replay
+let env = @aip.AipProtocol::dispatch(
+  proto, @aip.Event, "urn:agent:group:ops", ("hello" : Json),
+)
+```
+
+### API quick reference
+
+| Task | Entry points |
+| --- | --- |
+| Identity code validation (185.2) | `@identity.aic_validate` · `AgentIdentity::from_json` |
+| Register / auth / lifecycle (185.3) | `@registry.TokenRegistry::register` → `authenticate` → `lock / revoke / renew` |
+| Capability & coverage (185.4) | `@capability.AgentCapabilitySet::covers` |
+| Discovery & matching (185.5) | `@discovery.AgentNode::from_frontmatter` · `match_nodes` |
+| Send / receive (185.6) | `@aip.AipProtocol::dispatch / receive` · `AipSession::send / recv` |
+| Group routing & fanout | `@aip.RouteTable::add_group` · `fanout` |
+| Envelope JSON codec | `@aip.AipEnvelope::to_json / from_json` |
+| Tool single source (185.7) | `@tooling.ToolDescriptor::validate` · `ToolRegistry::invoke_tool` · `to_mcp_entry` |
+| Unified error contract | `@wire.ProtocolError` trait (typed suberrors across the stack) |
+| Transport extension | `@transport_async.TcpChannel` · `TlsTcpChannel` · `ndjson_encode / ndjson_decode` |
+| Formal verification | `@verify.clamp_i64 / next_seq / inbox_advance` |
+
 ### Quality
 
 | Gate | Result |
 | --- | --- |
 | `moon check --deny-warn --target all` | zero warnings on 4 targets |
-| `moon test` | 47/47 green (blackbox/whitebox/Fake/quickcheck properties, fixed seeds) |
-| Formal verification | `verify/` with `proof_enabled` (moon prove / Why3 + SMT) |
+| `moon test --target native` | 77/77 green (blackbox/whitebox/Fake Transport/quickcheck properties/model-based mock consumption, fixed seeds) |
+| Formal verification | `verify/` with `proof_enabled` — **moon prove 3 goals proved** (Z3 4.8.12/WSL) |
+| Coverage | 94.8%; CRAP < 10 on all functions |
+| Mutation testing | 12/12 KILLED (100% kill rate) |
+| Benchmarks | dispatch 90.51ns / registry_lookup 96.29ns / envelope_roundtrip 1.69µs |
 | Unified error contract | `ProtocolError` trait (part/code/message), typed suberrors across the stack |
+
+Suitable for MoonBit agent / multi-agent projects that need GB/Z 185-2026 protocol modeling. Not yet suitable for production deployments requiring MQ fan-out or SM-suite crypto (0.2.0 roadmap, see CHANGELOG).
+
+### FAQ
+
+**Why do envelope sequence numbers start at 1?**
+Monotonic increase is the GB/Z 185.6 anti-replay contract — each envelope's sequence must be strictly greater than the sender's historical max, formally proved by `verify/next_seq` via Z3 (see `docs/TEST_REPORT.md` §6).
+
+**How do I switch transports?**
+The protocol core (`aip`) is sans-I/O and transport-agnostic. Built-ins: `FakeTransport` (in-memory), `TcpChannel`/`TlsTcpChannel` (transport_async, TCP NDJSON / TLS with peer SHA256 fingerprint pinning).
+
+**Do group-message sequences collide?**
+No — each peer's inbox has an independent sequence space; same-sequence envelopes fanned out to different members never interfere (`aip/fanout`).
+
+**What does an AIC look like?**
+Dot-separated decimal fields (OID style, ≥ 2 segments); this stack allocates `1.2.156.185.2.*` (illustrative prefix; authoritative allocation belongs to the ACPs registry service). Validation: `identity/aic_validate` (per-character state machine).
+
+**When will SM2/SM3/SM4 be available?**
+0.2.0 roadmap (mooncry primitives ready, transport_async integration in progress); the current interconnect security layer is TLS + peer fingerprint pinning.
 
 ### License
 
