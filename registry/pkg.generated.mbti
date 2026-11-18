@@ -1,0 +1,52 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "walkzzz/gbz185.mbt/registry"
+
+import {
+  "moonbitlang/core/json",
+  "walkzzz/gbz185.mbt/discovery",
+  "walkzzz/gbz185.mbt/identity",
+  "walkzzz/gbz185.mbt/wire",
+}
+
+// Values
+
+// Errors
+pub(all) suberror RegistryError {
+  UnknownAgent(String)
+  AlreadyRegistered(String)
+  NotActive(String)
+  CredentialDenied(String)
+  InvalidAic(String)
+}
+pub fn RegistryError::code(Self) -> String
+pub fn RegistryError::message(Self) -> String
+pub fn RegistryError::output(Self, &Logger) -> Unit
+pub fn RegistryError::part(Self) -> String
+pub fn RegistryError::to_json(Self) -> @json.Json
+pub fn RegistryError::to_string(Self) -> String
+pub impl Show for RegistryError
+pub impl @json.ToJson for RegistryError
+pub impl @wire.ProtocolError for RegistryError
+
+// Types and methods
+pub struct TokenRegistry {
+  entries : Map[String, @discovery.AgentNode]
+  lifecycle : Map[String, @identity.IdentityStatus]
+  mut seq : Int32
+}
+pub fn TokenRegistry::authenticate(Self, String, String, &CAIVerifier) -> Bool raise RegistryError
+pub fn TokenRegistry::count(Self) -> Int32
+pub fn TokenRegistry::lock(Self, String) -> Unit raise RegistryError
+pub fn TokenRegistry::lookup(Self, String) -> @discovery.AgentNode?
+pub fn TokenRegistry::new() -> Self
+pub fn TokenRegistry::register(Self, @discovery.AgentNode, &CAIVerifier) -> String raise RegistryError
+pub fn TokenRegistry::revoke(Self, String) -> Unit raise RegistryError
+pub fn TokenRegistry::state(Self, String) -> @identity.IdentityStatus?
+pub fn TokenRegistry::unregister(Self, String) -> Unit raise RegistryError
+
+// Type aliases
+
+// Traits
+pub(open) trait CAIVerifier {
+  fn verify(Self, String) -> Bool
+}

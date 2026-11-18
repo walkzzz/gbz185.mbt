@@ -1,0 +1,52 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "walkzzz/gbz185.mbt"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn stack_part(String) -> String
+
+// Errors
+
+// Types and methods
+#derive(Eq, @debug.Debug)
+pub(all) enum ArchitectureMode {
+  LocalMode
+  InterconnectMode
+}
+pub fn ArchitectureMode::equal(Self, Self) -> Bool
+pub fn ArchitectureMode::name(Self) -> String
+pub fn ArchitectureMode::not_equal(Self, Self) -> Bool
+pub fn ArchitectureMode::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug)
+pub(all) enum GlobalModelEntity {
+  AgentEntity
+  AgentSkillEntity
+  AgentMessageEntity
+  AgentTaskEntity
+  SessionEntity
+}
+pub fn GlobalModelEntity::equal(Self, Self) -> Bool
+pub fn GlobalModelEntity::name(Self) -> String
+pub fn GlobalModelEntity::not_equal(Self, Self) -> Bool
+pub fn GlobalModelEntity::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug)
+pub(all) enum InterconnectRole {
+  ServiceProvider
+  ServiceConsumer
+  RegistryCenter
+  DiscoveryCenter
+  MessageGateway
+}
+pub fn InterconnectRole::equal(Self, Self) -> Bool
+pub fn InterconnectRole::name(Self) -> String
+pub fn InterconnectRole::not_equal(Self, Self) -> Bool
+pub fn InterconnectRole::to_repr(Self) -> @debug.Repr
+
+// Type aliases
+
+// Traits

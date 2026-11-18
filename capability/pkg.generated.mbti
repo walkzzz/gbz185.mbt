@@ -1,0 +1,32 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "walkzzz/gbz185.mbt/capability"
+
+import {
+  "moonbitlang/core/debug",
+  "moonbitlang/core/json",
+  "walkzzz/gbz185.mbt/wire",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+#derive(Eq, @debug.Debug)
+pub(all) struct AgentCapabilitySet {
+  capabilities : Array[String]
+  default_input_types : Array[String]
+  default_output_types : Array[String]
+  constraints : Array[String]
+}
+pub fn AgentCapabilitySet::covers(Self, ArrayView[String]) -> Bool
+pub fn AgentCapabilitySet::empty() -> Self
+pub fn AgentCapabilitySet::equal(Self, Self) -> Bool
+pub fn AgentCapabilitySet::from_json(@json.Json) -> Self raise @wire.JsonWireError
+pub fn AgentCapabilitySet::not_equal(Self, Self) -> Bool
+pub fn AgentCapabilitySet::to_json(Self) -> @json.Json
+pub fn AgentCapabilitySet::to_repr(Self) -> @debug.Repr
+
+// Type aliases
+
+// Traits

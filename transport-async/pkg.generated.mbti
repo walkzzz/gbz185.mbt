@@ -1,0 +1,13 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "walkzzz/gbz185.mbt/transport-async"
+
+// Values
+pub fn package_id() -> String
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits

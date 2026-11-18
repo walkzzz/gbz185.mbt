@@ -1,0 +1,36 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "walkzzz/gbz185.mbt/discovery"
+
+import {
+  "moonbitlang/core/debug",
+  "moonbitlang/core/json",
+  "walkzzz/gbz185.mbt/capability",
+  "walkzzz/gbz185.mbt/identity",
+  "walkzzz/gbz185.mbt/wire",
+}
+
+// Values
+pub fn match_nodes(ArrayView[AgentNode], ArrayView[String], require_discoverable? : Bool) -> Array[AgentNode]
+
+// Errors
+
+// Types and methods
+#derive(Eq, @debug.Debug)
+pub(all) struct AgentNode {
+  urn : String
+  display_name : String
+  identity : @identity.AgentIdentity
+  acs : @capability.AgentCapabilitySet
+  discoverable : Bool
+  endpoint : String?
+}
+pub fn AgentNode::equal(Self, Self) -> Bool
+pub fn AgentNode::from_frontmatter(String, String, @identity.IdentityStatus, Bool, Array[String], Array[String], Array[String]) -> Self
+pub fn AgentNode::from_json(@json.Json) -> Self raise @wire.JsonWireError
+pub fn AgentNode::not_equal(Self, Self) -> Bool
+pub fn AgentNode::to_json(Self) -> @json.Json
+pub fn AgentNode::to_repr(Self) -> @debug.Repr
+
+// Type aliases
+
+// Traits

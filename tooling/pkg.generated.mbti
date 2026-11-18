@@ -1,0 +1,61 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "walkzzz/gbz185.mbt/tooling"
+
+import {
+  "moonbitlang/core/debug",
+  "moonbitlang/core/json",
+  "walkzzz/gbz185.mbt/wire",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+#derive(Eq, @debug.Debug)
+pub(all) enum ToolBinding {
+  McpBinding(String)
+  NativeBinding
+}
+pub fn ToolBinding::equal(Self, Self) -> Bool
+pub fn ToolBinding::not_equal(Self, Self) -> Bool
+pub fn ToolBinding::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug)
+pub(all) struct ToolDescriptor {
+  name : String
+  description : String
+  input_schema : @json.Json
+  binding : ToolBinding
+}
+pub fn ToolDescriptor::equal(Self, Self) -> Bool
+pub fn ToolDescriptor::from_json(@json.Json) -> Self raise @wire.JsonWireError
+pub fn ToolDescriptor::not_equal(Self, Self) -> Bool
+pub fn ToolDescriptor::to_json(Self) -> @json.Json
+pub fn ToolDescriptor::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug)
+pub(all) struct ToolInvocation {
+  invocation_id : String
+  tool : String
+  args : @json.Json
+}
+pub fn ToolInvocation::equal(Self, Self) -> Bool
+pub fn ToolInvocation::not_equal(Self, Self) -> Bool
+pub fn ToolInvocation::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug)
+pub(all) enum ToolOutcome {
+  Completed(@json.Json)
+  Failed(String)
+}
+pub fn ToolOutcome::equal(Self, Self) -> Bool
+pub fn ToolOutcome::not_equal(Self, Self) -> Bool
+pub fn ToolOutcome::to_repr(Self) -> @debug.Repr
+
+// Type aliases
+
+// Traits
+pub(open) trait ToolCallable {
+  fn invoke(Self, ToolInvocation) -> ToolOutcome
+}

@@ -1,0 +1,56 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "walkzzz/gbz185.mbt/wire"
+
+import {
+  "moonbitlang/core/json",
+}
+
+// Values
+pub fn agent_urn_prefix() -> String
+
+pub fn aip_protocol_name() -> String
+
+pub fn envelope_version() -> String
+
+pub fn group_urn_prefix() -> String
+
+pub fn json_bool_field(@json.Json, String) -> Bool raise JsonWireError
+
+pub fn json_int64_field(@json.Json, String) -> Int64 raise JsonWireError
+
+pub fn json_object_field(@json.Json, String) -> @json.Json raise JsonWireError
+
+pub fn json_optional_int64(@json.Json, String) -> Int64? raise JsonWireError
+
+pub fn json_optional_string(@json.Json, String) -> String? raise JsonWireError
+
+pub fn json_string_array_opt(@json.Json, String) -> Array[String] raise JsonWireError
+
+pub fn json_string_field(@json.Json, String) -> String raise JsonWireError
+
+// Errors
+pub(all) suberror JsonWireError {
+  MissingField(String)
+  BadType(String, String)
+  BadValue(String, String)
+}
+pub fn JsonWireError::code(Self) -> String
+pub fn JsonWireError::message(Self) -> String
+pub fn JsonWireError::output(Self, &Logger) -> Unit
+pub fn JsonWireError::part(Self) -> String
+pub fn JsonWireError::to_json(Self) -> @json.Json
+pub fn JsonWireError::to_string(Self) -> String
+pub impl Show for JsonWireError
+pub impl @json.ToJson for JsonWireError
+pub impl ProtocolError for JsonWireError
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+pub(open) trait ProtocolError {
+  fn part(Self) -> String
+  fn code(Self) -> String
+  fn message(Self) -> String
+}

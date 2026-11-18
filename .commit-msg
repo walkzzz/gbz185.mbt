@@ -1,0 +1,19 @@
+feat: GB/Z 185-2026 national standard stack in MoonBit (Parts 1-7)
+
+- wire/: ProtocolError trait + JSON helpers + envelope constants
+- arch root package (185.1): dual-mode, global model, roles
+- identity/ (185.2): AIC encoding structure, unique id, CAI, identity_status
+- registry/ (185.3): ATR register/credential/authn/lifecycle/unregister
+  (CAIVerifier trait injection, clamp_i64 proven via verify package)
+- capability/ (185.4): ACS metadata/inputs/outputs/constraints
+- discovery/ (185.5): ADP search/match/discoverable filtering
+- aip/ (185.6): envelope, monotonic seq anti-replay, group routing,
+  FakeTransport (sans-I/O), protocol state machine
+- tooling/ (185.7): ToolDescriptor single-source model, invocation, binding
+- verify/: proof_enabled formalization (moon prove / Why3 + SMT)
+- transport-async/: placeholder (W12: @socket/@tls/moonamqp1)
+
+Quality gates: moon check --deny-warn --target all clean (4 targets),
+moon test 47/47 green (blackbox/whitebox/fake/quickcheck properties,
+fixed seeds), moon info contracts generated, mutation test suite
+10/10 KILLED in agentskills main repo docs/TEST_REPORT.md.

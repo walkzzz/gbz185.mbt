@@ -1,0 +1,7 @@
+import {
+  "moonbitlang/core/json",
+  "walkzzz/gbz185.mbt/wire",
+  "walkzzz/gbz185.mbt/identity",
+  "walkzzz/gbz185.mbt/discovery",
+  "walkzzz/gbz185.mbt/verify",
+}

@@ -1,0 +1,13 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "walkzzz/gbz185.mbt/verify"
+
+// Values
+pub fn clamp_i64(Int64, Int64, Int64) -> Int64
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits

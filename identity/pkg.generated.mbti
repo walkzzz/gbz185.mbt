@@ -1,0 +1,46 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "walkzzz/gbz185.mbt/identity"
+
+import {
+  "moonbitlang/core/debug",
+  "moonbitlang/core/json",
+  "walkzzz/gbz185.mbt/wire",
+}
+
+// Values
+pub fn aic_has_stack_prefix(String) -> Bool
+
+pub fn aic_validate(String) -> Bool
+
+// Errors
+
+// Types and methods
+#derive(Eq, @debug.Debug)
+pub(all) struct AgentIdentity {
+  aic : String
+  identity_status : IdentityStatus
+  cai_ref : String?
+  registered_at : Int64?
+}
+pub fn AgentIdentity::equal(Self, Self) -> Bool
+pub fn AgentIdentity::from_json(@json.Json) -> Self raise @wire.JsonWireError
+pub fn AgentIdentity::not_equal(Self, Self) -> Bool
+pub fn AgentIdentity::to_json(Self) -> @json.Json
+pub fn AgentIdentity::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug)
+pub(all) enum IdentityStatus {
+  NoIdentity
+  Active
+  Locked
+  Revoked
+}
+pub fn IdentityStatus::equal(Self, Self) -> Bool
+pub fn IdentityStatus::from_wire(String) -> Self?
+pub fn IdentityStatus::not_equal(Self, Self) -> Bool
+pub fn IdentityStatus::to_repr(Self) -> @debug.Repr
+pub fn IdentityStatus::to_wire(Self) -> String
+
+// Type aliases
+
+// Traits
