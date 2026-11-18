@@ -70,7 +70,17 @@
 - **落盘工具**：`scripts/mockgen.mbtx`（独立 .mbtx，生成 JSON 文件供 fuzz/人工检查）。
 - **真实模型接入**：GGUF 模型（Qwen2.5-0.5B，469MB）路径与 llama-server 调用方式见 `test-fixtures/llm-local.md`（W7 集成期）。
 
-## 6. 结论
+## 6. 形式化验证（moon prove，2026-11-17 完成）
+
+| 项 | 结果 |
+| --- | --- |
+| 运行环境 | WSL Ubuntu + moon 0.1.20261104 + **Z3 4.8.12**（`moon prove`） |
+| 证明目标 | **2 goals proved**（1 of 1 packages proved） |
+| `clamp_i64` | proof_require lo<=hi ⊢ lo<=res<=hi（ATR 注册序号硬边界防护，registry 真实调用） |
+| `next_seq` | proof_require prev>=0 ⊢ res>prev（**AIP 信封序号严格递增——防重放契约的数学基础**，aip 包 dispatch 真实调用） |
+| 方法 | 「已证明 = 已使用」：证明函数被主包真实调用（对齐 simple-agent verify 模式），证明义务由 Z3 机器可查 |
+
+## 7. 结论
 
 - 52/52 测试全绿；四目标 `moon check --deny-warn --target all` 零警告；覆盖率 94.8%；CRAP 全函数 < 10；变异击杀率 100%（12/12）；基准纳秒级。
 - **GB/Z 185 协议栈达到可发布质量基线**（GATE_REPORT 86/100 优秀 PASS 的性能整改项已关闭）。
