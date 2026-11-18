@@ -15,12 +15,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install MoonBit
-        run: |
-          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "$MOONBIT_VERSION"
-          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
-      - name: moon update (refresh registry index)
-        run: moon update
+      - name: Install MoonBit + update registry (retry)
+        uses: nick-fields/retry@v3
+        with:
+          retry_attempts: 3
+          retry_max_time: 300
+          command: |
+            curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "$MOONBIT_VERSION"
+            echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+            "$HOME/.moon/bin/moon" update
       - name: moon check --deny-warn --target all
         run: moon check --deny-warn --target all
 
@@ -29,12 +32,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install MoonBit
-        run: |
-          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "$MOONBIT_VERSION"
-          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
-      - name: moon update
-        run: moon update
+      - name: Install MoonBit + update registry (retry)
+        uses: nick-fields/retry@v3
+        with:
+          retry_attempts: 3
+          retry_max_time: 300
+          command: |
+            curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "$MOONBIT_VERSION"
+            echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+            "$HOME/.moon/bin/moon" update
       - name: moon info
         run: moon info
       - name: Fail on .mbti drift
@@ -45,12 +51,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install MoonBit
-        run: |
-          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "$MOONBIT_VERSION"
-          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
-      - name: moon update
-        run: moon update
+      - name: Install MoonBit + update registry (retry)
+        uses: nick-fields/retry@v3
+        with:
+          retry_attempts: 3
+          retry_max_time: 300
+          command: |
+            curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "$MOONBIT_VERSION"
+            echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+            "$HOME/.moon/bin/moon" update
       - name: Install Z3
         run: sudo apt-get update && sudo apt-get install -y z3
       - name: moon prove
@@ -65,21 +74,24 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - name: Install MoonBit (unix)
+      - name: Install MoonBit + update registry (unix, retry)
         if: runner.os != 'Windows'
-        run: |
-          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "$MOONBIT_VERSION"
-          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
-      - name: Install MoonBit (windows)
+        uses: nick-fields/retry@v3
+        with:
+          retry_attempts: 3
+          retry_max_time: 300
+          command: |
+            curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "$MOONBIT_VERSION"
+            echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+            "$HOME/.moon/bin/moon" update
+      - name: Install MoonBit (windows, explicit zip)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
-          iex (irm https://cli.moonbitlang.com/install/powershell.ps1)
+          Invoke-WebRequest -Uri "https://cli.moonbitlang.com/binaries/$env:MOONBIT_VERSION/moonbit-windows-x86_64.zip" -OutFile "$env:RUNNER_TEMP\moonbit.zip"
+          Expand-Archive -Path "$env:RUNNER_TEMP\moonbit.zip" -DestinationPath "$env:USERPROFILE\.moon" -Force
           Add-Content $env:GITHUB_PATH "$env:USERPROFILE\.moon\bin"
-      - name: moon update (unix)
-        if: runner.os != 'Windows'
-        run: moon update
+          moon update
       - name: moon test --target native
         run: moon test --target native
 
@@ -92,11 +104,14 @@ jobs:
         target: [js, wasm, wasm-gc]
     steps:
       - uses: actions/checkout@v4
-      - name: Install MoonBit
-        run: |
-          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "$MOONBIT_VERSION"
-          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
-      - name: moon update
-        run: moon update
+      - name: Install MoonBit + update registry (retry)
+        uses: nick-fields/retry@v3
+        with:
+          retry_attempts: 3
+          retry_max_time: 300
+          command: |
+            curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "$MOONBIT_VERSION"
+            echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+            "$HOME/.moon/bin/moon" update
       - name: moon test --target ${{ matrix.target }}
         run: moon test --target ${{ matrix.target }}

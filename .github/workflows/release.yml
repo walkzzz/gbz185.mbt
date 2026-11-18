@@ -17,12 +17,15 @@ jobs:
     if: github.event.inputs.confirm == 'RELEASE'
     steps:
       - uses: actions/checkout@v4
-      - name: Install MoonBit
-        run: |
-          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "$MOONBIT_VERSION"
-          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
-      - name: moon update
-        run: moon update
+      - name: Install MoonBit + update registry (retry)
+        uses: nick-fields/retry@v3
+        with:
+          retry_attempts: 3
+          retry_max_time: 300
+          command: |
+            curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "$MOONBIT_VERSION"
+            echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+            "$HOME/.moon/bin/moon" update
       - name: moon check --deny-warn --target all (gate)
         run: moon check --deny-warn --target all
       - name: moon test
