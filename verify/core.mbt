@@ -27,3 +27,19 @@ pub fn clamp_i64(
     v
   }
 }
+
+///|
+/// AIP 信封序号推进（GB/Z 185.6 防重放契约的数学基础）。
+///
+/// 证明义务：前置 prev >= 0（序号从 0 起单调分配）时，返回值严格大于 prev。
+/// 被 aip 包 dispatch 真实调用——每次分发产生的新序号必然大于历史序号，
+/// 「单调递增」性质由 Z3 证明而非仅靠测试抽样。
+/// AIP envelope sequence advance: proof obligation prev >= 0 |- res > prev (strictly monotonic, the mathematical basis of anti-replay); really called by the aip package dispatch.
+pub fn next_seq(
+  prev : Int64,
+) -> Int64 where {
+  proof_require: prev >= 0,
+  proof_ensure: res => res > prev,
+} {
+  prev + 1
+}

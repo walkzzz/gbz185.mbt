@@ -6,6 +6,7 @@ import {
   "walkzzz/gbz185.mbt/identity",
   "walkzzz/gbz185.mbt/capability",
   "walkzzz/gbz185.mbt/discovery",
+  "walkzzz/gbz185.mbt/verify",
 }
 
 import {

@@ -15,7 +15,9 @@ test "mock generator produces distinct nodes per seed" {
 test "mock nodes survive wire roundtrip" {
   let nodes = @discovery.generate_mock_nodes(42, 8)
   for n in nodes {
-    let back = @discovery.AgentNode::from_json(n.to_json()) catch { _ => panic() }
+    let back = @discovery.AgentNode::from_json(n.to_json()) catch {
+      _ => panic()
+    }
     assert_eq(back, n)
   }
 }
@@ -23,7 +25,11 @@ test "mock nodes survive wire roundtrip" {
 ///|
 test "mock nodes feed match_nodes with capability filter" {
   let nodes = @discovery.generate_mock_nodes(7, 10)
-  let matched = @discovery.match_nodes(nodes[:], ["skill:demo"], require_discoverable=false)
+  let matched = @discovery.match_nodes(
+    nodes[:],
+    ["skill:demo"],
+    require_discoverable=false,
+  )
   for m in matched {
     assert_true(m.acs.covers(["skill:demo"]))
   }

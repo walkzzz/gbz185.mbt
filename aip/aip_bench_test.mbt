@@ -3,18 +3,34 @@
 ///|
 test (b : @bench.T) {
   let node = @discovery.AgentNode::from_frontmatter(
-    "urn:agent:a", "A", @identity.Active, true, [], [], [],
+    "urn:agent:a",
+    "A",
+    @identity.Active,
+    true,
+    [],
+    [],
+    [],
   )
   let proto = @aip.AipProtocol::new(node)
   let env = @aip.AipProtocol::dispatch(
-    proto, @aip.Event, "urn:agent:group:g", ("x" : Json),
+    proto,
+    @aip.Event,
+    "urn:agent:group:g",
+    ("x" : Json),
   )
   let reg = @registry.TokenRegistry::new()
   for i in 0..<200 {
     let bench_node = @discovery.AgentNode::from_frontmatter(
-      "urn:agent:bench:\{i}", "N\{i}", @identity.Active, true, [], [], [],
+      "urn:agent:bench:\{i}",
+      "N\{i}",
+      @identity.Active,
+      true,
+      [],
+      [],
+      [],
     )
-    let _ = @registry.TokenRegistry::register(reg, bench_node, AcceptAllBench::{})
+    let _ = @registry.TokenRegistry::register(reg, bench_node, AcceptAllBench::{
+    })
   }
 
   b.bench(name="envelope_wire_roundtrip", fn() {
@@ -23,13 +39,14 @@ test (b : @bench.T) {
   })
 
   b.bench(name="dispatch_pipeline", fn() {
-    try {
-      b.keep(
-        @aip.AipProtocol::dispatch(
-          proto, @aip.Heartbeat, "urn:agent:group:g", ("x" : Json),
-        ),
-      )
-    } catch {
+    b.keep(
+      @aip.AipProtocol::dispatch(
+        proto,
+        @aip.Heartbeat,
+        "urn:agent:group:g",
+        ("x" : Json),
+      ),
+    ) catch {
       _ => ()
     }
   })

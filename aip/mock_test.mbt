@@ -4,7 +4,13 @@
 ///|
 test "mutated envelopes: accept only strictly increasing seq" {
   let node = @discovery.AgentNode::from_frontmatter(
-    "urn:agent:a", "A", @identity.Active, true, [], [], [],
+    "urn:agent:a",
+    "A",
+    @identity.Active,
+    true,
+    [],
+    [],
+    [],
   )
   let proto = @aip.AipProtocol::new(node)
   let base : @aip.AipEnvelope = {
@@ -19,10 +25,10 @@ test "mutated envelopes: accept only strictly increasing seq" {
   let mut inbox_b = 0L
   for seed in 0..<20 {
     let mutated = @aip.generate_mutated_envelope(base, seed)
-    let with_sender = { ..mutated, sender_urn: "urn:agent:b" }
-    let verdict : Result[@aip.AipMessage, @aip.AipError] = try {
-      Ok(@aip.AipProtocol::receive(proto, with_sender))
-    } catch {
+    let with_sender = { ..mutated, sender_urn: "urn:agent:b", }
+    let verdict : Result[@aip.AipMessage, @aip.AipError] = Ok(
+      @aip.AipProtocol::receive(proto, with_sender),
+    ) catch {
       err => Err(err)
     }
     match verdict {
@@ -38,7 +44,13 @@ test "mutated envelopes: accept only strictly increasing seq" {
 ///|
 test "mock dispatch envelopes are all deliverable (seed 化批量)" {
   let node = @discovery.AgentNode::from_frontmatter(
-    "urn:agent:a", "A", @identity.Active, true, [], [], [],
+    "urn:agent:a",
+    "A",
+    @identity.Active,
+    true,
+    [],
+    [],
+    [],
   )
   let proto = @aip.AipProtocol::new(node)
   let envs = @aip.generate_dispatch_envelopes(proto, 99, 25)

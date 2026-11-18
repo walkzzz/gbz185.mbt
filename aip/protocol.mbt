@@ -168,7 +168,8 @@ pub fn AipProtocol::dispatch(
   if !(is_group || self.peers.get(recipient_urn) is Some(_)) {
     raise Dispatch("unknown unicast recipient \{recipient_urn}")
   }
-  self.outbox_seq += 1L
+  // 序号推进使用形式化证明函数（verify/next_seq：严格递增性质由 Z3 证明）
+  self.outbox_seq = @verify.next_seq(self.outbox_seq)
   {
     envelope_version: envelope_version(),
     sender_urn: self.self_node.urn,
