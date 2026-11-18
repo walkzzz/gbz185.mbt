@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  MOONBIT_VERSION: 0.1.20261104
+  MOONBIT_VERSION: 0.1.20261117
 
 jobs:
   check:
