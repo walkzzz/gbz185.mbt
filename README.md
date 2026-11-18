@@ -89,15 +89,21 @@ let env = @aip.AipProtocol::dispatch(
 | 门禁 | 结果 |
 | --- | --- |
 | `moon check --deny-warn --target all` | 四目标零警告 |
-| `moon test --target native` | 77/77 全绿（黑盒/白盒/Fake Transport/quickcheck 属性/小模型 mock 消费，seed 固定可复现） |
+| `moon test --target native` | **77/77 全绿（2026-11-18 实测）**（黑盒/白盒/Fake Transport/quickcheck 属性/小模型 mock 消费，seed 固定可复现） |
 | 形式化验证 | `verify/` 包 `proof_enabled`——**moon prove 3 goals proved**（Z3 4.8.12/WSL） |
 | 覆盖率 | 94.8%；CRAP 全函数 < 10 |
 | 变异测试 | 12/12 KILLED（击杀率 100%） |
 | 基准实测 | dispatch 90.51ns / registry_lookup 96.29ns / envelope_roundtrip 1.69µs |
 | 统一错误契约 | `ProtocolError` 特征（part/code/message），全栈 suberror 分型 |
 
-适用场景：需要 GB/Z 185-2026 协议建模的 MoonBit 智能体/多智能体项目。
-不适用：需要 MQ 分发与国密套件的生产部署（0.2.0 路线图，见 CHANGELOG）。
+## 能力与边界
+
+- **定位即库**：仅协议建模与交互状态机，不含协议端点服务、编码侧与 UI；服务端组装属上层应用。
+- 协议核心 **sans-I/O**：不感知传输；传输扩展覆盖 TCP NDJSON 与 TLS（对端 SHA-256 指纹钉扎）。
+- **不含**：MQ 分发、国密套件（SM2/SM3/SM4）互联安全层——0.2.0 路线图（见 CHANGELOG）。
+- mTLS 双向客户端证书受 @tls API 限制，以对端证书 SHA-256 指纹钉扎等效实现（GAP-2）。
+- Windows 本地 `moon prove` 受 moon 工具链 `\\?` mkdir 平台 bug 影响，证明验证走 WSL/CI（GAP-1）。
+- 完整真话台账见 [docs/known-gaps.md](docs/known-gaps.md)；适用：需要 GB/Z 185-2026 协议建模的 MoonBit 智能体/多智能体项目。
 
 ## 常见问题 / FAQ
 
@@ -208,14 +214,21 @@ let env = @aip.AipProtocol::dispatch(
 | Gate | Result |
 | --- | --- |
 | `moon check --deny-warn --target all` | zero warnings on 4 targets |
-| `moon test --target native` | 77/77 green (blackbox/whitebox/Fake Transport/quickcheck properties/model-based mock consumption, fixed seeds) |
+| `moon test --target native` | **77/77 green (measured 2026-11-18)** (blackbox/whitebox/Fake Transport/quickcheck properties/model-based mock consumption, fixed seeds) |
 | Formal verification | `verify/` with `proof_enabled` — **moon prove 3 goals proved** (Z3 4.8.12/WSL) |
 | Coverage | 94.8%; CRAP < 10 on all functions |
 | Mutation testing | 12/12 KILLED (100% kill rate) |
 | Benchmarks | dispatch 90.51ns / registry_lookup 96.29ns / envelope_roundtrip 1.69µs |
 | Unified error contract | `ProtocolError` trait (part/code/message), typed suberrors across the stack |
 
-Suitable for MoonBit agent / multi-agent projects that need GB/Z 185-2026 protocol modeling. Not yet suitable for production deployments requiring MQ fan-out or SM-suite crypto (0.2.0 roadmap, see CHANGELOG).
+### Capabilities & Boundaries
+
+- **Library only**: protocol modeling and interaction state machines; no protocol endpoint services, encoding side, or UI — server assembly belongs to the host application.
+- The protocol core is **sans-I/O**: transport-agnostic; the transport extension covers TCP NDJSON and TLS (peer SHA-256 fingerprint pinning).
+- **Not included**: MQ fan-out, SM-suite (SM2/SM3/SM4) interconnect security — 0.2.0 roadmap (see CHANGELOG).
+- mTLS mutual client certificates are limited by the @tls API; implemented equivalently via peer certificate SHA-256 fingerprint pinning (GAP-2).
+- Windows-local `moon prove` is affected by a moon toolchain `\\?` mkdir platform bug; proof verification runs on WSL/CI (GAP-1).
+- Full honest ledger: [docs/known-gaps.md](docs/known-gaps.md). Suitable for MoonBit agent / multi-agent projects that need GB/Z 185-2026 protocol modeling.
 
 ### FAQ
 
