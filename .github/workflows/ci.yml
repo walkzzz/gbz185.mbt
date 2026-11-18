@@ -18,8 +18,9 @@ jobs:
       - name: Install MoonBit + update registry (retry)
         uses: nick-fields/retry@v3
         with:
-          retry_attempts: 3
-          retry_max_time: 300
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_wait_seconds: 10
           command: |
             curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "$MOONBIT_VERSION"
             echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
@@ -35,8 +36,9 @@ jobs:
       - name: Install MoonBit + update registry (retry)
         uses: nick-fields/retry@v3
         with:
-          retry_attempts: 3
-          retry_max_time: 300
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_wait_seconds: 10
           command: |
             curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "$MOONBIT_VERSION"
             echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
@@ -54,8 +56,9 @@ jobs:
       - name: Install MoonBit + update registry (retry)
         uses: nick-fields/retry@v3
         with:
-          retry_attempts: 3
-          retry_max_time: 300
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_wait_seconds: 10
           command: |
             curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "$MOONBIT_VERSION"
             echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
@@ -78,20 +81,26 @@ jobs:
         if: runner.os != 'Windows'
         uses: nick-fields/retry@v3
         with:
-          retry_attempts: 3
-          retry_max_time: 300
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_wait_seconds: 10
           command: |
             curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "$MOONBIT_VERSION"
             echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
             "$HOME/.moon/bin/moon" update
-      - name: Install MoonBit (windows, explicit zip)
+      - name: Install MoonBit (windows, explicit zip, retry)
         if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          Invoke-WebRequest -Uri "https://cli.moonbitlang.com/binaries/$env:MOONBIT_VERSION/moonbit-windows-x86_64.zip" -OutFile "$env:RUNNER_TEMP\moonbit.zip"
-          Expand-Archive -Path "$env:RUNNER_TEMP\moonbit.zip" -DestinationPath "$env:USERPROFILE\.moon" -Force
-          Add-Content $env:GITHUB_PATH "$env:USERPROFILE\.moon\bin"
-          moon update
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_wait_seconds: 10
+          shell: pwsh
+          command: |
+            Invoke-WebRequest -Uri "https://cli.moonbitlang.com/binaries/$env:MOONBIT_VERSION/moonbit-windows-x86_64.zip" -OutFile "$env:RUNNER_TEMP\moonbit.zip"
+            Expand-Archive -Path "$env:RUNNER_TEMP\moonbit.zip" -DestinationPath "$env:USERPROFILE\.moon" -Force
+            Add-Content $env:GITHUB_PATH "$env:USERPROFILE\.moon\bin"
+            & "$env:USERPROFILE\.moon\bin\moon.exe" update
       - name: moon test --target native
         run: moon test --target native
 
@@ -107,8 +116,9 @@ jobs:
       - name: Install MoonBit + update registry (retry)
         uses: nick-fields/retry@v3
         with:
-          retry_attempts: 3
-          retry_max_time: 300
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_wait_seconds: 10
           command: |
             curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "$MOONBIT_VERSION"
             echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
