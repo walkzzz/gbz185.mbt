@@ -4,6 +4,8 @@ package "walkzzz/gbz185.mbt/verify"
 // Values
 pub fn clamp_i64(Int64, Int64, Int64) -> Int64
 
+pub fn inbox_advance(Int64, Int64) -> Bool
+
 pub fn next_seq(Int64) -> Int64
 
 // Errors

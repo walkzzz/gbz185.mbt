@@ -13,7 +13,9 @@
 | Fake Transport | `aip/fake.mbt` + `fake_test.mbt` | 2 | ✅ |
 | 属性测试（quickcheck，seed 2026-2030） | `aip/aip_prop_test.mbt` | 5 | ✅ |
 | **小模型 mock 数据消费**（fake LLM simulation） | `discovery/mock_data.mbt` + `discovery/mock_test.mbt` + `aip/mock_data.mbt` + `aip/mock_test.mbt` | 5 | ✅ |
-| **合计** | | **52** | **52/52 全绿** |
+| **GB/Z 185.3 ATR 深度实现**（凭证生命周期/容量/事件审计/检索/运维查询） | `registry/registry_test.mbt` 追加 | 5 | ✅ |
+| **GB/Z 185.7 工具调用深度实现**（ToolRegistry/分发/批量/schema 单源映射/validate） | `tooling/tooling_test.mbt` 追加 | 6 | ✅ |
+| **合计** | | **63** | **63/63 全绿** |
 
 补充：`aip/aip_bench_test.mbt` 基准测试 3 项（不计入 Total，见 §4）；`AipProtocol::invariant` 可执行不变量全周期保持。
 
@@ -75,9 +77,10 @@
 | 项 | 结果 |
 | --- | --- |
 | 运行环境 | WSL Ubuntu + moon 0.1.20261104 + **Z3 4.8.12**（`moon prove`） |
-| 证明目标 | **2 goals proved**（1 of 1 packages proved） |
+| 证明目标 | **3 goals proved**（1 of 1 packages proved，2026-11-18 复验） |
 | `clamp_i64` | proof_require lo<=hi ⊢ lo<=res<=hi（ATR 注册序号硬边界防护，registry 真实调用） |
 | `next_seq` | proof_require prev>=0 ⊢ res>prev（**AIP 信封序号严格递增——防重放契约的数学基础**，aip 包 dispatch 真实调用） |
+| `inbox_advance` | proof_require last>=0 ⊢ res==(incoming>last)（**防重放准入裁决纯函数化——判定与规格逐字对应**，aip 包 receive 真实调用） |
 | 方法 | 「已证明 = 已使用」：证明函数被主包真实调用（对齐 simple-agent verify 模式），证明义务由 Z3 机器可查 |
 
 ## 7. 结论

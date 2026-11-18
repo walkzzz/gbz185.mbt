@@ -47,7 +47,7 @@
 | 1 | 补 `examples/` 最小可运行示例 + FAQ/踩坑指南 | W7 前 | 文档完整 7→优 |
 | 2 | 补 `CHANGELOG.md` / `CONTRIBUTING.md` / `SECURITY.md`（开源套件，COD §7） | 首次 mooncakes 发布前 | 维护性 7→优 |
 | 3 | `moon bench` 基准实测（信封编解码/registry 查询/防重放），回填 PRD §3.1 | W13-D2 | 性能资源 5.6→优 |
-| 4 | ~~`moon prove` 运行 verify 包证明义务~~ **✅ 已关闭（2026-11-17）**：WSL Ubuntu 内 moon prove + Z3 4.8.12 运行成功——**2 goals proved**（clamp_i64 + next_seq）；next_seq（序号严格递增，防重放契约数学基础）已接入 aip 包 dispatch 真实调用 | ✅ 完成 | 契约稳定（加分项） |
+| 4 | ~~`moon prove` 运行 verify 包证明义务~~ **✅ 已关闭（2026-11-18 复验）**：WSL Ubuntu 内 moon prove + Z3 4.8.12——**3 goals proved**（clamp_i64 + next_seq 严格递增 + inbox_advance 防重放裁决）；next_seq/inbox_advance 均已接入 aip 包 dispatch/receive 真实调用。**185.3 ATR 与 185.7 工具调用深度实现完成（生产级）**：凭证生命周期/容量防护/事件审计/能力检索（registry）+ ToolRegistry/调用日志/MCP 单源映射/描述校验（tooling）——单一职责与测试维度进一步强化 | ✅ 完成 | 契约稳定（加分项） |
 
 ## 4. 发布前流水线状态（mooncakes 发布场景附加）
 

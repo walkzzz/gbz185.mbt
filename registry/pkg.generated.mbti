@@ -2,6 +2,7 @@
 package "walkzzz/gbz185.mbt/registry"
 
 import {
+  "moonbitlang/core/debug",
   "moonbitlang/core/json",
   "walkzzz/gbz185.mbt/discovery",
   "walkzzz/gbz185.mbt/identity",
@@ -17,6 +18,8 @@ pub(all) suberror RegistryError {
   NotActive(String)
   CredentialDenied(String)
   InvalidAic(String)
+  CapacityExceeded(Int32)
+  CredentialExpired(String)
 }
 pub fn RegistryError::code(Self) -> String
 pub fn RegistryError::message(Self) -> String
@@ -29,17 +32,38 @@ pub impl @json.ToJson for RegistryError
 pub impl @wire.ProtocolError for RegistryError
 
 // Types and methods
-pub struct TokenRegistry {
-  entries : Map[String, @discovery.AgentNode]
-  lifecycle : Map[String, @identity.IdentityStatus]
-  mut seq : Int32
+#derive(Eq, @debug.Debug)
+pub(all) enum RegistryEvent {
+  Registered(String, String)
+  Locked(String)
+  Revoked(String)
+  Unregistered(String)
+  CredentialRenewed(String)
+  AuthenticationDenied(String)
 }
-pub fn TokenRegistry::authenticate(Self, String, String, &CAIVerifier) -> Bool raise RegistryError
+pub fn RegistryEvent::equal(Self, Self) -> Bool
+pub fn RegistryEvent::not_equal(Self, Self) -> Bool
+pub fn RegistryEvent::to_repr(Self) -> @debug.Repr
+
+pub struct TokenRegistry {
+  // private fields
+}
+pub fn TokenRegistry::aic_of(Self, String) -> String?
+pub fn TokenRegistry::authenticate(Self, String, String, &CAIVerifier, now? : Int64) -> Bool raise RegistryError
+pub fn TokenRegistry::capacity(Self) -> Int32
+pub fn TokenRegistry::clear_events(Self) -> Unit
 pub fn TokenRegistry::count(Self) -> Int32
+pub fn TokenRegistry::events(Self) -> Array[RegistryEvent]
+pub fn TokenRegistry::find_by_capability(Self, ArrayView[String]) -> Array[@discovery.AgentNode]
+pub fn TokenRegistry::last_seen_of(Self, String) -> Int64?
+pub fn TokenRegistry::list_active(Self) -> Array[@discovery.AgentNode]
 pub fn TokenRegistry::lock(Self, String) -> Unit raise RegistryError
 pub fn TokenRegistry::lookup(Self, String) -> @discovery.AgentNode?
-pub fn TokenRegistry::new() -> Self
+pub fn TokenRegistry::new(max_entries? : Int32) -> Self
 pub fn TokenRegistry::register(Self, @discovery.AgentNode, &CAIVerifier) -> String raise RegistryError
+pub fn TokenRegistry::register_with_validity(Self, @discovery.AgentNode, &CAIVerifier, now? : Int64, validity? : Int64) -> String raise RegistryError
+pub fn TokenRegistry::registered_at_of(Self, String) -> Int64?
+pub fn TokenRegistry::renew(Self, String, &CAIVerifier, now? : Int64, validity? : Int64) -> Int64 raise RegistryError
 pub fn TokenRegistry::revoke(Self, String) -> Unit raise RegistryError
 pub fn TokenRegistry::state(Self, String) -> @identity.IdentityStatus?
 pub fn TokenRegistry::unregister(Self, String) -> Unit raise RegistryError

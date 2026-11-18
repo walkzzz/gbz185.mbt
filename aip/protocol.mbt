@@ -202,7 +202,8 @@ pub fn AipProtocol::receive(
     Some(s) => s
     None => 0L
   }
-  guard env.seq > last else {
+  // 防重放裁决使用形式化证明函数（verify/inbox_advance：res == (incoming > last) 由 Z3 证明）
+  guard @verify.inbox_advance(last, env.seq) else {
     raise Envelope("stale or duplicate seq \{env.seq} <= \{last}")
   }
   self.inbox_seq[env.sender_urn] = env.seq

@@ -10,6 +10,19 @@ import {
 // Values
 
 // Errors
+pub(all) suberror ToolingError {
+  UnknownTool(String)
+  DuplicateTool(String)
+  RegistryFull(Int32)
+  InvalidDescriptor(String)
+}
+pub fn ToolingError::code(Self) -> String
+pub fn ToolingError::message(Self) -> String
+pub fn ToolingError::output(Self, &Logger) -> Unit
+pub fn ToolingError::part(Self) -> String
+pub fn ToolingError::to_string(Self) -> String
+pub impl Show for ToolingError
+pub impl @wire.ProtocolError for ToolingError
 
 // Types and methods
 #derive(Eq, @debug.Debug)
@@ -32,7 +45,9 @@ pub fn ToolDescriptor::equal(Self, Self) -> Bool
 pub fn ToolDescriptor::from_json(@json.Json) -> Self raise @wire.JsonWireError
 pub fn ToolDescriptor::not_equal(Self, Self) -> Bool
 pub fn ToolDescriptor::to_json(Self) -> @json.Json
+pub fn ToolDescriptor::to_mcp_entry(Self) -> @json.Json
 pub fn ToolDescriptor::to_repr(Self) -> @debug.Repr
+pub fn ToolDescriptor::validate(Self) -> Bool
 
 #derive(Eq, @debug.Debug)
 pub(all) struct ToolInvocation {
@@ -52,6 +67,21 @@ pub(all) enum ToolOutcome {
 pub fn ToolOutcome::equal(Self, Self) -> Bool
 pub fn ToolOutcome::not_equal(Self, Self) -> Bool
 pub fn ToolOutcome::to_repr(Self) -> @debug.Repr
+
+pub struct ToolRegistry {
+  // private fields
+}
+pub fn ToolRegistry::capacity(Self) -> Int32
+pub fn ToolRegistry::clear_log(Self) -> Unit
+pub fn ToolRegistry::count(Self) -> Int32
+pub fn ToolRegistry::descriptors(Self) -> Array[ToolDescriptor]
+pub fn ToolRegistry::invocation_log(Self) -> Array[(ToolInvocation, ToolOutcome)]
+pub fn ToolRegistry::invoke_batch(Self, ArrayView[ToolInvocation]) -> Array[ToolOutcome]
+pub fn ToolRegistry::invoke_tool(Self, ToolInvocation) -> ToolOutcome raise ToolingError
+pub fn ToolRegistry::lookup(Self, String) -> ToolDescriptor?
+pub fn ToolRegistry::new(max_tools? : Int32) -> Self
+pub fn ToolRegistry::register(Self, ToolDescriptor, (ToolInvocation) -> ToolOutcome) -> Unit raise ToolingError
+pub fn ToolRegistry::unregister(Self, String) -> Unit raise ToolingError
 
 // Type aliases
 

@@ -43,3 +43,21 @@ pub fn next_seq(
 } {
   prev + 1
 }
+
+///|
+/// AIP 防重放准入裁决纯函数（GB/Z 185.6）：incoming 相对 last 的准入判定。
+///
+/// 证明义务：结果**恒等于**「incoming > last」——防重放规格的机器可查形式，
+/// 判定逻辑与规格文档逐字对应（规格条款：仅严格递增的序号被接受）。
+/// 被 aip 包 receive 真实调用——裁决行为由 Z3 证明与规格一致。
+/// AIP anti-replay admission gate: proof obligation res == (incoming > last) —
+/// the replay-specification clause machine-checked; really called by the aip package receive.
+pub fn inbox_advance(
+  last : Int64,
+  incoming : Int64,
+) -> Bool where {
+  proof_require: last >= 0,
+  proof_ensure: res => res == (incoming > last),
+} {
+  incoming > last
+}
