@@ -1,0 +1,30 @@
+name: Release (mooncakes)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type RELEASE to confirm publishing"
+        required: true
+
+jobs:
+  publish:
+    name: moon publish (walkzzz/gbz185.mbt)
+    runs-on: ubuntu-latest
+    if: github.event.inputs.confirm == 'RELEASE'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+      - name: moon check --deny-warn --target all (gate)
+        run: moon check --deny-warn --target all
+      - name: moon test
+        run: moon test
+      - name: moon publish --dry-run
+        run: moon publish --dry-run
+      - name: moon publish
+        run: moon publish
+        env:
+          MOONCAKE_TOKEN: ${{ secrets.MOONCAKE_TOKEN }}
