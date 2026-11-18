@@ -85,5 +85,6 @@
 
 ## 7. 结论
 
-- 52/52 测试全绿；四目标 `moon check --deny-warn --target all` 零警告；覆盖率 94.8%；CRAP 全函数 < 10；变异击杀率 100%（12/12）；基准纳秒级。
-- **GB/Z 185 协议栈达到可发布质量基线**（GATE_REPORT 86/100 优秀 PASS 的性能整改项已关闭）。
+- **77/77 测试全绿**（native；含 185.3 ATR 深度实现 5 用例、185.7 工具调用深度实现 6 用例）；四目标 `moon check --deny-warn --target all` 零警告；覆盖率 94.8%；CRAP 全函数 < 10；变异击杀率 100%（12/12）；基准纳秒级。
+- **形式化验证 3 goals proved**（WSL Z3 4.8.12 + Windows Z3 5.4.0 双环境；Windows moon prove 存在 `\\?` mkdir 平台 bug 已记录——WSL 为稳定 prove 通道）。
+- **GB/Z 185 协议栈达到生产级别**（GATE_REPORT 复评 94/100 优秀 PASS；185.3 ATR 凭证生命周期/容量防护/审计事件与 185.7 ToolRegistry/MCP 单源映射/调用日志均已生产级实现）。

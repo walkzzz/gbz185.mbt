@@ -1,0 +1,7 @@
+import {
+  "walkzzz/gbz185.mbt/aip",
+  "walkzzz/gbz185.mbt/identity",
+  "walkzzz/gbz185.mbt/discovery",
+}
+
+pkgtype(kind: "executable")

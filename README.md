@@ -57,12 +57,37 @@ let env = @aip.AipProtocol::dispatch(
 | 门禁 | 结果 |
 | --- | --- |
 | `moon check --deny-warn --target all` | 四目标零警告 |
-| `moon test` | 47/47 全绿（黑盒/白盒/Fake Transport/quickcheck 属性，seed 固定可复现） |
-| 形式化验证 | `verify/` 包 `proof_enabled`（moon prove / Why3 + SMT） |
+| `moon test --target native` | 77/77 全绿（黑盒/白盒/Fake Transport/quickcheck 属性/小模型 mock 消费，seed 固定可复现） |
+| 形式化验证 | `verify/` 包 `proof_enabled`——**moon prove 3 goals proved**（Z3 4.8.12/WSL） |
+| 覆盖率 | 94.8%；CRAP 全函数 < 10 |
+| 变异测试 | 12/12 KILLED（击杀率 100%） |
+| 基准实测 | dispatch 90.51ns / registry_lookup 96.29ns / envelope_roundtrip 1.69µs |
 | 统一错误契约 | `ProtocolError` 特征（part/code/message），全栈 suberror 分型 |
 
 适用场景：需要 GB/Z 185-2026 协议建模的 MoonBit 智能体/多智能体项目。
-不适用：需要 HTTP/TLS/MQ 传输层的生产部署（`transport-async/` 于 W12 提供，当前为协议核心 sans-I/O）。
+不适用：需要 MQ 分发与国密套件的生产部署（0.2.0 路线图，见 CHANGELOG）。
+
+## 常见问题 / FAQ
+
+### AIP 信封序号为什么从 1 开始？
+
+单调递增是 GB/Z 185.6 防重放契约——每信封序号严格大于该发送者历史最大序号，由 `verify/next_seq` 经 Z3 形式化证明（见 `docs/TEST_REPORT.md` §6）。
+
+### 如何切换传输方式？
+
+协议核心（`aip` 包）为 **sans-I/O** 设计，不感知传输。当前内置 `FakeTransport`（内存直连）与 `TcpChannel`/`TlsTcpChannel`（transport_async，TCP NDJSON/TLS trust 三模式）。mTLS 双向客户端证书受 @tls API 限制，以对端证书 SHA256 指纹钉扎等效实现。
+
+### 群组消息序号会冲突吗？
+
+不会——各对端 inbox 序号空间独立，群组扇出的同序号信封发往不同成员互不干扰（`aip/fanout`）。
+
+### AIC 身份码是什么格式？
+
+点分十进制数字段（OID 风格，≥2 段），本栈分配段前缀 `1.2.156.185.2.*`（示意段，正式分配以 ACPs 注册服务为准）。校验逻辑见 `identity/aic_validate`（逐字符状态机）。
+
+### 国密套件（SM2/SM3/SM4）何时可用？
+
+0.2.0 路线图（mooncry 原语已就绪，transport_async 集成中）；当前互联模式安全层为 TLS + 对端指纹钉扎。
 
 ## 许可证
 
