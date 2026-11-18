@@ -10,6 +10,8 @@ import {
 }
 
 // Values
+pub fn generate_mock_nodes(Int32, Int32) -> Array[AgentNode]
+
 pub fn match_nodes(ArrayView[AgentNode], ArrayView[String], require_discoverable? : Bool) -> Array[AgentNode]
 
 // Errors

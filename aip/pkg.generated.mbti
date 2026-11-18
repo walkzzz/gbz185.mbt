@@ -13,6 +13,10 @@ import {
 // Values
 pub fn envelope_version() -> String
 
+pub fn generate_dispatch_envelopes(AipProtocol, Int32, Int32) -> Array[AipEnvelope]
+
+pub fn generate_mutated_envelope(AipEnvelope, Int32) -> AipEnvelope
+
 pub fn protocol_name() -> String
 
 pub fn send_direct(AipProtocol, AipProtocol, MessageKind, @json.Json) -> AipMessage raise AipError

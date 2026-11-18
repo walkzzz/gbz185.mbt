@@ -1,0 +1,180 @@
+---
+import {
+  "moonbitlang/async",
+  "moonbitlang/async/fs" @fs,
+  "moonbitlang/async/process" @proc,
+}
+---
+
+// GB/Z 185 协议栈变异测试（gbz185 仓版；运行：moon run scripts/mutation_test.mbtx）
+// 对每个变异：生成变异源文件 → moon test → 判定 KILLED/SURVIVED → 恢复 → 汇总报告
+
+///|
+struct Mutation {
+  id : String
+  file : String
+  old_sub : String
+  new_sub : String
+  desc : String
+}
+
+///|
+let mutations : Array[Mutation] = [
+  {
+    id: "M01",
+    file: "aip/protocol.mbt",
+    old_sub: "self.outbox_seq += 1L",
+    new_sub: "self.outbox_seq += 2L",
+    desc: "AIP outbox step doubled",
+  },
+  {
+    id: "M02",
+    file: "aip/protocol.mbt",
+    old_sub: "guard env.seq > last else {",
+    new_sub: "guard env.seq >= last else {",
+    desc: "AIP replay seq comparison loosened",
+  },
+  {
+    id: "M03",
+    file: "aip/protocol.mbt",
+    old_sub: "recipient_urn.has_prefix(@wire.group_urn_prefix())",
+    new_sub: "recipient_urn.has_prefix(\"urn:agent:grp:\")",
+    desc: "group URN prefix mutated",
+  },
+  {
+    id: "M04",
+    file: "aip/protocol.mbt",
+    old_sub: "guard resp.accepted else {",
+    new_sub: "guard !resp.accepted else {",
+    desc: "ATR client acceptance negated",
+  },
+  {
+    id: "M05",
+    file: "aip/protocol.mbt",
+    old_sub: "guard env.recipient_urn == self.self_node.urn else {",
+    new_sub: "guard env.recipient_urn != self.self_node.urn else {",
+    desc: "AIP recipient check negated",
+  },
+  {
+    id: "M06",
+    file: "aip/protocol.mbt",
+    old_sub: "guard env.sender_urn != self.self_node.urn else {",
+    new_sub: "guard env.sender_urn == self.self_node.urn else {",
+    desc: "AIP self-loop check negated",
+  },
+  {
+    id: "M07",
+    file: "identity/identity.mbt",
+    old_sub: "NoIdentity => \"none\"",
+    new_sub: "NoIdentity => \"noneX\"",
+    desc: "identity wire value mutated",
+  },
+  {
+    id: "M08",
+    file: "identity/identity.mbt",
+    old_sub: "in_seg && segments >= 2",
+    new_sub: "in_seg && segments >= 1",
+    desc: "AIC single-segment validation loosened",
+  },
+  {
+    id: "M09",
+    file: "aip/codec.mbt",
+    old_sub: "guard ver == envelope_version() else {",
+    new_sub: "guard ver != envelope_version() else {",
+    desc: "envelope version check negated",
+  },
+  {
+    id: "M10",
+    file: "registry/registry.mbt",
+    old_sub: "Some(@identity.Active) => verifier.verify(cai_ref)",
+    new_sub: "Some(@identity.Active) => true",
+    desc: "ATR authentication short-circuited",
+  },
+  {
+    id: "M11",
+    file: "discovery/discovery.mbt",
+    old_sub: "if require_discoverable && !node.discoverable {",
+    new_sub: "if false && !node.discoverable {",
+    desc: "ADP discoverable filter disabled",
+  },
+  {
+    id: "M12",
+    file: "tooling/tooling.mbt",
+    old_sub: "Some(String(\"native\")) => NativeBinding",
+    new_sub: "Some(String(\"native\")) => McpBinding(\"mutated\")",
+    desc: "tool binding constructor swapped",
+  },
+]
+
+///|
+fn replace_all(s : String, old : String, new : String) -> String {
+  let parts = s.split(old)
+  if parts.length() == 1 {
+    return s
+  }
+  let buf = StringBuilder()
+  for i, p in parts {
+    buf.write_string(p.to_string())
+    if i < parts.length() - 1 {
+      buf.write_string(new)
+    }
+  }
+  buf.to_string()
+}
+
+///|
+async fn run_tests() -> Int {
+  let (code, _out, _err) = @proc.collect_output("moon", ["test"], cwd=".") catch {
+    _ => panic()
+  }
+  code
+}
+
+///|
+async fn main raise {
+  let files = [
+    "aip/protocol.mbt",
+    "aip/codec.mbt",
+    "identity/identity.mbt",
+    "registry/registry.mbt",
+    "discovery/discovery.mbt",
+    "tooling/tooling.mbt",
+  ]
+  let sources : Map[String, String] = Map([])
+  for f in files {
+    let content = @fs.read_file(f).text() catch { _ => panic() }
+    sources[f] = content
+  }
+  let mut killed = 0
+  let mut survived = 0
+  let results : Array[String] = []
+  for m in mutations {
+    let original = sources.get(m.file).unwrap_or("")
+    let mutated = replace_all(original, m.old_sub, m.new_sub)
+    if mutated == original {
+      results.push("\{m.id}: NOT-APPLIED (pattern not found: \{m.old_sub})")
+      continue
+    }
+    @fs.write_file(m.file, mutated)
+    let code = run_tests()
+    if code == 0 {
+      survived += 1
+      results.push("\{m.id}: SURVIVED — \{m.desc}")
+    } else {
+      killed += 1
+      results.push("\{m.id}: KILLED — \{m.desc}")
+    }
+    @fs.write_file(m.file, original)
+  }
+  let final_code = run_tests()
+  for r in results {
+    println(r)
+  }
+  println("=== mutation summary ===")
+  println("killed=\{killed} survived=\{survived} total=\{mutations.length()}")
+  if final_code == 0 {
+    println("baseline restored: tests green")
+  } else {
+    println("WARNING: baseline tests failing after restore — manual check needed")
+  }
+}

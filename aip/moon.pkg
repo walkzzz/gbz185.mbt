@@ -1,6 +1,7 @@
 import {
   "moonbitlang/core/debug",
   "moonbitlang/core/json",
+  "moonbitlang/core/random",
   "walkzzz/gbz185.mbt/wire",
   "walkzzz/gbz185.mbt/identity",
   "walkzzz/gbz185.mbt/capability",
@@ -9,4 +10,6 @@ import {
 
 import {
   "moonbitlang/core/quickcheck",
+  "moonbitlang/core/bench",
+  "walkzzz/gbz185.mbt/registry",
 } for "test"

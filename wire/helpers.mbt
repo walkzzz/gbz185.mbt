@@ -108,3 +108,14 @@ pub fn json_optional_int64(
     _ => raise BadType(key, "object")
   }
 }
+
+///|
+/// 任意字符串 → 32 字节 chacha8 种子（循环填充；小模型 mock 数据生成器用）
+pub fn seed32_bytes(s : String) -> Bytes {
+  let base = @ascii.encode(s)
+  let out : Array[Byte] = []
+  for i in 0..<32 {
+    out.push(base[i % base.length()])
+  }
+  Bytes::from_array(out)
+}
