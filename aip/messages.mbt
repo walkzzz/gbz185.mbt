@@ -1,4 +1,5 @@
 // AIP 四原语消息模型（discover / register / capability / dispatch）
+// AIP four-primitive message model (discover / register / capability / dispatch)
 
 ///|
 #derive(Eq, Debug)

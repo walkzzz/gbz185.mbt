@@ -1,4 +1,5 @@
 // GB/Z 185.6 AIP 消息信封与消息类型（wire 契约）
+// GB/Z 185.6 AIP message envelope and message kinds (wire contract)
 
 ///|
 #derive(Eq, Debug)

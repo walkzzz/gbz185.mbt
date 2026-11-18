@@ -1,4 +1,5 @@
 // GB/Z 185.5 智能体发现 ADP：检索/匹配/discoverable 可见性过滤
+// GB/Z 185.5 Agent discovery ADP: retrieval, matching, discoverable visibility filtering
 
 ///|
 #derive(Eq, Debug)
@@ -69,6 +70,7 @@ pub fn AgentNode::from_json(j : Json) -> AgentNode raise @wire.JsonWireError {
 
 ///|
 /// ADP 检索与匹配：discoverable 可见性过滤 + 能力覆盖过滤（filter 为空表示不过滤）
+/// ADP retrieval and matching: discoverable visibility filter + capability coverage filter (an empty filter means no filtering).
 pub fn match_nodes(
   nodes : ArrayView[AgentNode],
   filter_capabilities : ArrayView[String],

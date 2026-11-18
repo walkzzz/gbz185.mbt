@@ -1,10 +1,13 @@
 // GB/Z 185.3 身份管理 ATR（Agent Token Registry）：注册/凭证/鉴权/生命周期/注销
 // 内存实现（sans-I/O）；正式 ACPs 注册服务为外部系统（互联模式经 transport-async 接入）。
 // 凭证校验为 CAIVerifier trait 注入点（核心零 mooncakes 依赖——skills-security 提供基于 mooncred 的绑定）。
+// GB/Z 185.3 Identity ATR (Agent Token Registry): registration, credential, authentication, lifecycle, deregistration
+// — in-memory (sans-I/O) with the real ACPs registry as an external system; CAI verification is injected via the CAIVerifier trait (core keeps zero mooncake dependencies).
 
 ///|
 /// CAI 凭证校验注入点（GB/Z 185.3 鉴权）
 /// pub(open)：允许黑盒测试与 skills-security 跨包实现
+/// CAI credential verification injection point (GB/Z 185.3 authentication); pub(open) for cross-package implementations in black-box tests and skills-security.
 pub(open) trait CAIVerifier {
   fn verify(Self, String) -> Bool
 }
@@ -74,6 +77,7 @@ pub impl @wire.ProtocolError for RegistryError with fn message(self) -> String {
 
 ///|
 /// ATR 内存注册表：urn → 节点快照 + 生命周期状态（生命周期与节点快照分离管理）
+/// In-memory ATR registry: urn -> node snapshot + lifecycle status (lifecycle and node snapshots managed separately).
 pub struct TokenRegistry {
   entries : Map[String, @discovery.AgentNode]
   lifecycle : Map[String, @identity.IdentityStatus]
@@ -109,6 +113,7 @@ pub fn TokenRegistry::state(
 ///|
 /// 注册（GB/Z 185.3）：分配 AIC（clamp 序号防护，verify 包已证明）→ 状态 Active。
 /// node.identity.cai_ref 存在时先过 CAIVerifier。
+/// Register (GB/Z 185.3): allocate AIC (clamped sequence guard, proven in the verify package) -> status Active; runs the CAIVerifier first when node.identity.cai_ref is present.
 pub fn TokenRegistry::register(
   self : TokenRegistry,
   node : @discovery.AgentNode,
@@ -178,6 +183,7 @@ pub fn TokenRegistry::unregister(
 
 ///|
 /// 鉴权（GB/Z 185.3）：agent 须 Active；CAI 凭证校验经注入的 verifier（false = 凭证不通过）
+/// Authenticate (GB/Z 185.3): agent must be Active; the CAI credential is checked via the injected verifier (false = credential denied).
 pub fn TokenRegistry::authenticate(
   self : TokenRegistry,
   urn : String,

@@ -1,4 +1,5 @@
 // GB/Z 185 wire 层：公共 JSON helpers（重叠钉扎 #4——避免各协议包复制）
+// GB/Z 185 wire layer: shared JSON helpers (overlap pinning #4 — avoids duplication across protocol packages)
 
 ///|
 pub fn json_string_array_opt(

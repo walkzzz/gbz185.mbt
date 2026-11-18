@@ -1,6 +1,8 @@
 // GB/Z 185.6 AIP 协议核心状态机：注册（185.3 客户端面）/发现（185.5 客户端面）/能力交换/交互
 // 本地模式 sans-I/O：无时钟/无网络，时间戳与传输由调用方/transport-async 注入。
 // InterconnectProtocol trait 于 W12 集成期引入（本包 .mbti 即 F17 冻结契约）。
+// GB/Z 185.6 AIP core protocol state machine: register (185.3 client side), discover (185.5 client side), capability exchange, interaction
+// — local-mode sans-I/O (no clock/network); timestamps and transport are injected by callers or transport-async; the InterconnectProtocol trait lands in W12 with this package's .mbti as the frozen F17 contract.
 
 ///|
 #derive(Debug)
@@ -49,6 +51,7 @@ pub fn AipProtocol::invariant(self : AipProtocol) -> Bool {
 }
 
 /// GB/Z 185.3 ATR 客户端面：构造可信注册请求（携带 AIC/ACS；本地模式 aic 待分配）
+/// GB/Z 185.3 ATR client side: build a trustworthy register request (carries AIC/ACS; aic pending in local mode)
 
 ///|
 pub fn AipProtocol::register_request(self : AipProtocol) -> RegisterRequest {
@@ -88,6 +91,7 @@ pub fn AipProtocol::handle_register_response(
 }
 
 /// GB/Z 185.5 ADP 客户端面：构造发现请求
+/// GB/Z 185.5 ADP client side: build a discover request
 
 ///|
 pub fn AipProtocol::discover_request(self : AipProtocol) -> DiscoverRequest {
@@ -123,6 +127,7 @@ pub fn AipProtocol::handle_discover_response(
 }
 
 /// GB/Z 185.4 ACS：构造能力交换请求（仅限已知对端）
+/// GB/Z 185.4 ACS: build a capability exchange request (known peers only)
 
 ///|
 pub fn AipProtocol::capability_request(
@@ -147,6 +152,7 @@ pub fn AipProtocol::capability_of(
 }
 
 /// GB/Z 185.6 AIP：封装信封并分配单调递增序号（群组 URN 直通，单播须已发现）
+/// GB/Z 185.6 AIP: wrap the envelope and assign a monotonically increasing seq (group URNs pass through; unicast requires a discovered peer)
 
 ///|
 pub fn AipProtocol::dispatch(
@@ -175,6 +181,7 @@ pub fn AipProtocol::dispatch(
 }
 
 /// GB/Z 185.6 AIP：接收侧校验（版本/收件人/自环/单调序号防重放）
+/// GB/Z 185.6 AIP: receive-side validation (version/recipient/self-loop/monotonic seq anti-replay)
 
 ///|
 pub fn AipProtocol::receive(

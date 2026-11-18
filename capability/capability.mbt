@@ -1,4 +1,5 @@
 // GB/Z 185.4 智能体描述 ACS（Agent Capability Statement）：能力元数据/接口/输入输出/约束
+// GB/Z 185.4 Agent description ACS (Agent Capability Statement): capability metadata, interfaces, input/output types, constraints
 
 ///|
 #derive(Eq, Debug)
@@ -43,6 +44,7 @@ pub fn AgentCapabilitySet::from_json(
 
 ///|
 /// ACS 匹配原语（GB/Z 185.5 发现匹配的底层）：能力集是否覆盖全部所需能力
+/// ACS matching primitive (underlying the GB/Z 185.5 discovery matching): whether the capability set covers all required capabilities.
 pub fn AgentCapabilitySet::covers(
   self : AgentCapabilitySet,
   required : ArrayView[String],

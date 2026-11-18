@@ -1,6 +1,8 @@
 // GB/Z 185.1 总体架构（模块根包门面）：双模式、全局模型、角色定义。
 // 内容源自上游 agentskills-runtime README 已提取的架构要素（本地模式/互联模式、
 // agents/agent_skills/agent_messages/agent_tasks 全局模型、ACPs/CA/发现服务/MQ 角色）。
+// GB/Z 185.1 overall architecture (module root package facade): dual modes, global model, role definitions
+// (extracted from the upstream agentskills-runtime README: local/interconnect modes, the agents/agent_skills/agent_messages/agent_tasks global model, ACPs/CA/discovery/MQ roles).
 
 ///|
 #derive(Eq, Debug)

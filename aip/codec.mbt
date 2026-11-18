@@ -1,4 +1,5 @@
 // GB/Z 185.6 AIP wire 编解码（信封与四原语消息；模型编解码已归 identity/capability/discovery 各包）
+// GB/Z 185.6 AIP wire codec (envelope and four-primitive messages; model codecs live in the identity/capability/discovery packages)
 
 ///|
 pub fn AipEnvelope::to_json(self : AipEnvelope) -> Json {

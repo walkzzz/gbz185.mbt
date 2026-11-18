@@ -1,6 +1,7 @@
 // FakeTransport（sans-I/O mock）：内存直连两个协议栈。
 // 用途：上层（skills-mcp/server）与互联互通测试（TC-F17-002 本地版）的注入点；
 // 正式 transport（@socket/@tls/MQ）于 W12 接入同一 dispatch/receive 契约面。
+// FakeTransport (sans-I/O mock): connects two protocol stacks in memory — an injection point for upper layers (skills-mcp/server) and interconnect tests (TC-F17-002 local); the real transport (@socket/@tls/MQ) joins the same dispatch/receive contract in W12.
 
 ///|
 pub fn send_direct(

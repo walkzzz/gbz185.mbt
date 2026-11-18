@@ -1,4 +1,5 @@
 // GB/Z 185 wire 层：公共常量（信封版本 / AIP 协议名）
+// GB/Z 185 wire layer: shared constants (envelope version / AIP protocol name)
 
 ///|
 pub fn envelope_version() -> String {

@@ -1,4 +1,5 @@
 // GB/Z 185.6 AIP 错误分型（E3）——实现 wire.ProtocolError 统一契约（重叠钉扎 #4）
+// GB/Z 185.6 AIP error taxonomy (E3) — implements the wire.ProtocolError unified contract (overlap pinning #4)
 
 ///|
 pub(all) suberror AipError {
@@ -60,6 +61,7 @@ pub impl @wire.ProtocolError for AipError with fn message(self) -> String {
 
 ///|
 /// 错误域映射（原语归属：发现=185.5、注册=185.3、其余=185.6）
+/// Error domain mapping (primitive ownership: discovery=185.5, registry=185.3, rest=185.6).
 pub fn AipError::error_domain(self : AipError) -> String {
   match self {
     Discovery(_) => "gbz185.5"
