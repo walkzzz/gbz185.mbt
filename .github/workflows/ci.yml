@@ -90,7 +90,7 @@ jobs:
             curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "$MOONBIT_VERSION"
             echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
             "$HOME/.moon/bin/moon" update
-      - name: Install MoonBit (windows, explicit zip, retry)
+      - name: Install MoonBit (windows, explicit zip + core, retry)
         if: runner.os == 'Windows'
         uses: nick-fields/retry@v3
         with:
@@ -100,9 +100,13 @@ jobs:
           shell: pwsh
           command: |
             Invoke-WebRequest -Uri "https://cli.moonbitlang.com/binaries/$env:MOONBIT_VERSION/moonbit-windows-x86_64.zip" -OutFile "$env:RUNNER_TEMP\moonbit.zip"
+            Invoke-WebRequest -Uri "https://cli.moonbitlang.com/cores/core-$env:MOONBIT_VERSION.tar.gz" -OutFile "$env:RUNNER_TEMP\core.tar.gz"
             Expand-Archive -Path "$env:RUNNER_TEMP\moonbit.zip" -DestinationPath "$env:USERPROFILE\.moon" -Force
+            New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.moon\lib" | Out-Null
+            tar -xzf "$env:RUNNER_TEMP\core.tar.gz" -C "$env:USERPROFILE\.moon\lib"
             Add-Content $env:GITHUB_PATH "$env:USERPROFILE\.moon\bin"
             & "$env:USERPROFILE\.moon\bin\moon.exe" update
+            if ($LASTEXITCODE -ne 0) { exit 1 }
       - name: moon test --target native
         run: moon test --target native
 
