@@ -1,14 +1,20 @@
 # gbz185.mbt
 
 <p align="left">
+  <a href="https://github.com/walkzzz/gbz185.mbt/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/walkzzz/gbz185.mbt/actions/workflows/ci.yml/badge.svg"></a>
   <a href="https://github.com/walkzzz/gbz185.mbt/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
+  <a href="https://mooncakes.io/docs/walkzzz/gbz185.mbt"><img alt="mooncakes" src="https://img.shields.io/badge/mooncakes-0.1.0-blueviolet"></a>
   <img alt="MoonBit" src="https://img.shields.io/badge/MoonBit-%E6%9C%88%E5%85%94-purple">
   <img alt="Tests" src="https://img.shields.io/badge/tests-77%2F77%20passing-brightgreen">
+  <img alt="Prove" src="https://img.shields.io/badge/moon%20prove-20%20obligations%20proved-blue">
+  <img alt="Mutation" src="https://img.shields.io/badge/mutation-12%2F12%20KILLED-success">
   <img alt="Targets" src="https://img.shields.io/badge/targets-native%7Cjs%7Cwasm%7Cwasm--gc-orange">
   <img alt="Standard" src="https://img.shields.io/badge/GB%2FZ%20185--2026-%E6%99%BA%E8%83%BD%E4%BD%93%E4%BA%92%E8%81%94-red">
 </p>
 
 **简体中文（默认）** · [English](#english)
+
+**目录**：[协议栈总览](#协议栈总览) · [安装](#安装) · [快速开始](#快速开始) · [API 速览](#api-速览) · [质量门禁](#质量门禁) · [能力与边界](#能力与边界) · [FAQ](#常见问题--faq) · [文档](#文档) · [许可证](#许可证)
 
 ---
 
@@ -126,6 +132,20 @@ let env = @aip.AipProtocol::dispatch(
 ### 国密套件（SM2/SM3/SM4）何时可用？
 
 0.2.0 路线图（mooncry 原语已就绪，transport_async 集成中）；当前互联模式安全层为 TLS + 对端指纹钉扎。
+
+## 文档
+
+| 文档 | 内容 |
+| --- | --- |
+| [AGENTS.md](AGENTS.md) | Agent 指南：门禁纪律 · Mock 模式 · wire 陷阱 · 变异基线 |
+| [docs/TEST_REPORT.md](docs/TEST_REPORT.md) | 测试矩阵（77 用例）· 形式化验证（20 obligations）· 基准实测 |
+| [docs/GATE_REPORT.md](docs/GATE_REPORT.md) | 质量门禁报告（94/100 优秀 PASS） |
+| [docs/known-gaps.md](docs/known-gaps.md) | 真话台账：已知边界与缺口（诚实记录） |
+| [CHANGELOG.md](CHANGELOG.md) | 版本变更（Keep a Changelog） |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | 贡献指南 |
+| [SECURITY.md](SECURITY.md) | 安全政策：漏洞报告渠道 · 防重放证明背书 |
+| [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) | 第三方组件披露（Apache-2.0 等） |
+| [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | 行为准则（Contributor Covenant 2.1） |
 
 ## 许可证
 
