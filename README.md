@@ -42,7 +42,7 @@ MoonBit 实现的 **GB/Z 185-2026《人工智能 智能体互联》国家标准�
 | GB/Z 185.6 | `aip/` | 智能体交互 **AIP**（Agent Interconnection Protocol）：报文信封、单调序号防重放、群组 URN 路由、FakeTransport（sans-I/O） | ✅（MQ 分发与国密于 0.2.0） |
 | GB/Z 185.7 | `tooling/` | 智能体工具调用：`ToolDescriptor` 单源模型、调用流程、绑定契约（ToolCallable） | ✅ |
 
-公共层：`wire/`（**ProtocolError** 统一错误特征 + JSON 编解码工具 + 信封常量）、`transport_async/`（传输扩展：TCP NDJSON + TLS 对端指纹钉扎，MQ 分发于 0.2.0）、`verify/`（`proof_enabled` 形式化验证：`clamp_i64` / `next_seq` / `inbox_advance` 三命题经 moon prove 证明，证明义务由 SMT 机器可查）。
+公共层：`wire/`（**ProtocolError** 统一错误特征 + JSON 编解码工具 + 信封常量）、`transport_async/`（传输扩展：TCP NDJSON + TLS 对端指纹钉扎，MQ 分发于 0.2.0）、`verify/`（`proof_enabled` 形式化验证：**13 个验证函数 / 20 条证明义务经 moon prove 全部机器证明**——防重放链、钳制防护、ATR 状态机核、跨机组合、容量防护、JS 精度安全域）。
 
 ## 安装
 
@@ -90,7 +90,7 @@ let env = @aip.AipProtocol::dispatch(
 | --- | --- |
 | `moon check --deny-warn --target all` | 四目标零警告 |
 | `moon test --target native` | **77/77 全绿（2026-11-18 实测）**（黑盒/白盒/Fake Transport/quickcheck 属性/小模型 mock 消费，seed 固定可复现） |
-| 形式化验证 | `verify/` 包 `proof_enabled`——**moon prove 3 goals proved**（Z3 4.8.12/WSL） |
+| 形式化验证 | `verify/` 包 `proof_enabled`——**moon prove 20 obligations proved（13 verified functions）**（Z3 4.8.12/WSL，2026-11-19） |
 | 覆盖率 | 94.8%；CRAP 全函数 < 10 |
 | 变异测试 | 12/12 KILLED（击杀率 100%） |
 | 基准实测 | dispatch 90.51ns / registry_lookup 96.29ns / envelope_roundtrip 1.69µs |
@@ -167,7 +167,7 @@ MoonBit implementation of the **GB/Z 185-2026 "AI Agent Interconnection" nationa
 | GB/Z 185.6 | `aip/` | **AIP**: envelope, monotonic-sequence anti-replay, group URN routing, FakeTransport (sans-I/O) | ✅ (MQ & SM-suite at 0.2.0) |
 | GB/Z 185.7 | `tooling/` | Tool invocation: `ToolDescriptor` single-source model, invocation flow, binding contract | ✅ |
 
-Common layers: `wire/` (**ProtocolError** unified error trait + JSON helpers + envelope constants), `transport_async/` (transport extension: TCP NDJSON + TLS peer fingerprint pinning, MQ at 0.2.0), `verify/` (`proof_enabled` formal verification: `clamp_i64` / `next_seq` / `inbox_advance` proved via moon prove, machine-checkable SMT obligations).
+Common layers: `wire/` (**ProtocolError** unified error trait + JSON helpers + envelope constants), `transport_async/` (transport extension: TCP NDJSON + TLS peer fingerprint pinning, MQ at 0.2.0), `verify/` (`proof_enabled` formal verification: **13 verified functions / 20 proof obligations all machine-proved** — anti-replay chain, clamp guard, ATR state-machine core, cross-machine composition, capacity guard, JS precision safe domain).
 
 ### Install
 
@@ -215,7 +215,7 @@ let env = @aip.AipProtocol::dispatch(
 | --- | --- |
 | `moon check --deny-warn --target all` | zero warnings on 4 targets |
 | `moon test --target native` | **77/77 green (measured 2026-11-18)** (blackbox/whitebox/Fake Transport/quickcheck properties/model-based mock consumption, fixed seeds) |
-| Formal verification | `verify/` with `proof_enabled` — **moon prove 3 goals proved** (Z3 4.8.12/WSL) |
+| Formal verification | `verify/` with `proof_enabled` — **moon prove 20 obligations proved (13 verified functions)** (Z3 4.8.12/WSL, 2026-11-19) |
 | Coverage | 94.8%; CRAP < 10 on all functions |
 | Mutation testing | 12/12 KILLED (100% kill rate) |
 | Benchmarks | dispatch 90.51ns / registry_lookup 96.29ns / envelope_roundtrip 1.69µs |

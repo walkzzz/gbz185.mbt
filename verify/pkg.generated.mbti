@@ -2,11 +2,51 @@
 package "walkzzz/gbz185.mbt/verify"
 
 // Values
+pub const JS_SAFE_BOUND : Int64 = 9007199254740992
+
+pub const STATE_ACTIVE : Int32 = 1
+
+pub const STATE_PENDING : Int32 = 0
+
+pub fn activation_after2(Int32, Bool) -> Int32
+
+pub fn after_register(Int32) -> Int32
+
+pub fn aic_alloc_guard(Int64, Int64) -> Bool
+
 pub fn clamp_i64(Int64, Int64, Int64) -> Int64
+
+pub fn clamp_keeps_above(Int64, Int64, Int64, Int64) -> Bool
+
+pub fn dispatch_allowed(Int32) -> Bool
+
+pub fn dispatch_seq_admitted_by_peer(Int64, Int64) -> Bool
+
+pub fn gen_seq(Int64, Int64) -> Int64
+
+pub fn gen_seq_advances(Int64, Int64) -> Bool
+
+pub fn gen_seq_strict(Int64, Int64) -> Bool
+
+pub fn in_js_safe_domain(Int64) -> Bool
 
 pub fn inbox_advance(Int64, Int64) -> Bool
 
+pub fn inbox_monotonic(Int64, Int64, Bool) -> Bool
+
+pub fn inbox_update(Int64, Int64, Bool) -> Int64
+
 pub fn next_seq(Int64) -> Int64
+
+pub fn register_accepts_enables_dispatch() -> Bool
+
+pub fn register_within_capacity(Int32, Int32) -> Bool
+
+pub fn replay_chain(Int64, Int64, Int64) -> Bool
+
+pub fn safe_domain_no_overflow(Int64) -> Bool
+
+pub fn unregistered_dispatch_denied() -> Bool
 
 // Errors
 

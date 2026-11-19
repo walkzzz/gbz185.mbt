@@ -72,19 +72,28 @@
 - **落盘工具**：`scripts/mockgen.mbtx`（独立 .mbtx，生成 JSON 文件供 fuzz/人工检查）。
 - **真实模型接入**：GGUF 模型（Qwen2.5-0.5B，469MB）路径与 llama-server 调用方式见 `test-fixtures/llm-local.md`（W7 集成期）。
 
-## 6. 形式化验证（moon prove，2026-11-17 完成）
+## 6. 形式化验证（moon prove，2026-11-17 完成 / 2026-11-19 三档扩展）
 
 | 项 | 结果 |
 | --- | --- |
 | 运行环境 | WSL Ubuntu + moon 0.1.20261104 + **Z3 4.8.12**（`moon prove`） |
-| 证明目标 | **3 goals proved**（1 of 1 packages proved，2026-11-18 复验） |
-| `clamp_i64` | proof_require lo<=hi ⊢ lo<=res<=hi（ATR 注册序号硬边界防护，registry 真实调用） |
-| `next_seq` | proof_require prev>=0 ⊢ res>prev（**AIP 信封序号严格递增——防重放契约的数学基础**，aip 包 dispatch 真实调用） |
+| 证明目标 | **20 obligations proved / 13 verified functions**（1 of 1 packages proved，2026-11-19 三档扩展轮：10 个新命题 + 3 原有；核函数契约加强为完整刻画以支撑组合推理） |
+| `clamp_i64` | proof_require lo<=hi ⊢ 三分支完整刻画（res==v ∧ v∈[lo,hi] ∨ res==lo ∧ v<lo ∨ res==hi ∧ v>hi）（ATR 注册序号硬边界防护，registry 真实调用） |
+| `next_seq` | proof_require prev>=0 ⊢ **res==prev+1 ∧ res>prev**（**AIP 信封序号严格递增——防重放契约的数学基础**，aip 包 dispatch 真实调用） |
 | `inbox_advance` | proof_require last>=0 ⊢ res==(incoming>last)（**防重放准入裁决纯函数化——判定与规格逐字对应**，aip 包 receive 真实调用） |
-| 方法 | 「已证明 = 已使用」：证明函数被主包真实调用（对齐 simple-agent verify 模式），证明义务由 Z3 机器可查 |
+| `clamp_keeps_above` | last<lo<=hi ∧ v>last ⊢ clamp_i64(v,lo,hi)>last（**钳制不破坏防重放**——三分支均不回退序号） |
+| `replay_chain` | mid>last ∧ incoming>mid ⊢ inbox_advance(last,incoming)==true（**防重放三级传递链**） |
+| `gen_seq` 系 | mock 生成器序号核 base+i+1：`gen_seq_advances`（推进恒 > base）与 `gen_seq_strict`（相邻严格递增）——属性测试的元性质 |
+| `activation_after2` / `dispatch_allowed` 系 | ATR 状态机核（pending=0/active=1）：`register_accepts_enables_dispatch`（接受 ⊢ dispatch 允许）与 `unregistered_dispatch_denied`（未注册 ⊢ 拒绝）——互连演示实证语义的机器可查形式（model-based oracle） |
+| `inbox_update` / `inbox_monotonic` | **inbox watermark 单调不变量**：规格一致的准入下更新后 last_seen 永不回退（接受严格推进/拒绝保持） |
+| `dispatch_seq_admitted_by_peer` | **跨状态机组合**：发送方推进（next_seq）的新序号被 per-sender watermark ≤ prev 的合法接收方恒接受——防重放在「发送推进 × 接收准入」两侧闭合 |
+| `after_register` / `register_within_capacity` | 容量防护：count<max ⊢ count+1≤max（合法注册计数永不过冲） |
+| `in_js_safe_domain` / `safe_domain_no_overflow` | JS 精度安全域 2^53：域内分配器推进（next_seq）仍安全——wire「Int64 数字字段显式 Json::number」设计决策的机器可查形式 |
+| `aic_alloc_guard` | AIC 分配段边界：段内推进时 clamp_i64 恒等（**永不触发钳制**；越界场景由 clamp_keeps_above 保证不回退防重放） |
+| 方法 | 「已证明 = 已使用」：clamp_i64/next_seq/inbox_advance 被主包真实调用；状态机核模型（activation/inbox_update/after_register/gen_seq）作为协议语义 oracle，真实实现行为由测试与互连演示对齐（model-based oracle，诚实区分两类）；证明义务由 Z3 机器可查 |
 
 ## 7. 结论
 
 - **77/77 测试全绿**（native；含 185.3 ATR 深度实现 5 用例、185.7 工具调用深度实现 6 用例）；四目标 `moon check --deny-warn --target all` 零警告；覆盖率 94.8%；CRAP 全函数 < 10；变异击杀率 100%（12/12）；基准纳秒级。
-- **形式化验证 3 goals proved**（WSL Z3 4.8.12 + Windows Z3 5.4.0 双环境；Windows moon prove 存在 `\\?` mkdir 平台 bug 已记录——WSL 为稳定 prove 通道）。
+- **形式化验证 20 obligations proved / 13 verified functions**（2026-11-19 三档扩展：防重放链/钳制防护/ATR 状态机核/跨机组合/容量防护/JS 精度安全域；WSL Z3 4.8.12——Windows moon prove 存在 `\\?` mkdir 平台 bug 已记录，WSL 为稳定 prove 通道）。
 - **GB/Z 185 协议栈达到生产级别**（GATE_REPORT 复评 94/100 优秀 PASS；185.3 ATR 凭证生命周期/容量防护/审计事件与 185.7 ToolRegistry/MCP 单源映射/调用日志均已生产级实现）。
