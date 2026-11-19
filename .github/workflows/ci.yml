@@ -107,6 +107,10 @@ jobs:
             Add-Content $env:GITHUB_PATH "$env:USERPROFILE\.moon\bin"
             & "$env:USERPROFILE\.moon\bin\moon.exe" update
             if ($LASTEXITCODE -ne 0) { exit 1 }
+            & "$env:USERPROFILE\.moon\bin\moon.exe" -C "$env:USERPROFILE\.moon\lib\core" bundle --warn-list -a --target llvm
+            if ($LASTEXITCODE -ne 0) { exit 1 }
+            & "$env:USERPROFILE\.moon\bin\moon.exe" -C "$env:USERPROFILE\.moon\lib\core" bundle --warn-list -a --target wasm-gc
+            if ($LASTEXITCODE -ne 0) { exit 1 }
       - name: moon test --target native
         run: moon test --target native
 
