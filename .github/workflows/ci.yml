@@ -135,3 +135,28 @@ jobs:
             "$HOME/.moon/bin/moon" update
       - name: moon test --target ${{ matrix.target }}
         run: moon test --target ${{ matrix.target }}
+
+  coverage:
+    name: moon coverage analyze
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install MoonBit + update registry (retry)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_wait_seconds: 10
+          command: |
+            curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "$MOONBIT_VERSION"
+            echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+            "$HOME/.moon/bin/moon" update
+      - name: moon coverage analyze
+        run: |
+          set +e
+          moon coverage analyze > coverage.log 2>&1
+          RC=$?
+          tail -25 coverage.log
+          # 可见性优先：报告生成即通过；未覆盖行数不如硬门禁（新代码会波动）
+          grep -q "Total: .*uncovered" coverage.log || { echo "::error::coverage report missing"; exit 1; }
+          echo "coverage analyze exit code: $RC"
