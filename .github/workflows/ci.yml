@@ -7,7 +7,9 @@ on:
   workflow_dispatch:
 
 env:
-  MOONBIT_VERSION: 0.1.20261104
+  # 2026-11-19：CDN 具体版本对象全 403，但 `binaries/latest` 与 `cores/core-latest` 可下载
+  # （moonbit_shadow 实践验证；binding.latest => 200 实测）。待官方修复版本化对象后回锁。
+  MOONBIT_VERSION: latest
 
 jobs:
   check:
