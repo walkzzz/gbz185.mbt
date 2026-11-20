@@ -1,0 +1,7 @@
+import {
+  "walkzzz/gbz185.mbt/aip",
+  "walkzzz/gbz185.mbt/verify",
+  "moonbitlang/core/json",
+}
+
+pkgtype(kind: "foreign_library")

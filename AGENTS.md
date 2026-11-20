@@ -20,6 +20,7 @@ moon check --deny-warn --target all   # 四目标零警告（native/js/wasm/wasm
 moon test --target native             # 77/77（seed 固定可复现）
 moon fmt                              # 格式化
 moon info                             # 更新 .mbti 契约（git 入库，diff 必查）
+node scripts/check_pages.mjs          # 展示页自检（资源 / JS 导出 / AIP 编解码语义）
 ```
 
 形式化验证走 WSL（Windows 本地 moon prove 有 `\\?` mkdir 平台 bug——EINVAL/EACCES，勿反复重试）：

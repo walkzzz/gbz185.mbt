@@ -29,6 +29,8 @@ jobs:
             "$HOME/.moon/bin/moon" update
       - name: moon check --deny-warn --target all
         run: moon check --deny-warn --target all
+      - name: Pages demo self-check (assets / JS exports / AIP codec)
+        run: node scripts/check_pages.mjs
 
   contract:
     name: .mbti contract drift check

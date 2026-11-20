@@ -50,6 +50,13 @@ MoonBit 实现的 **GB/Z 185-2026《人工智能 智能体互联》国家标准�
 
 公共层：`wire/`（**ProtocolError** 统一错误特征 + JSON 编解码工具 + 信封常量）、`transport_async/`（传输扩展：TCP NDJSON + TLS 对端指纹钉扎，MQ 分发于 0.2.0）、`verify/`（`proof_enabled` 形式化验证：**13 个验证函数 / 20 条证明义务经 moon prove 全部机器证明**——防重放链、钳制防护、ATR 状态机核、跨机组合、容量防护、JS 精度安全域）。
 
+## 在线演示（浏览器内 AIP 编解码）
+
+**<https://walkzzz.github.io/gbz185.mbt/>**（启用 Pages 后）—— 信封编码/校验、群组扇出、序号推进；全部由编译到 JavaScript 的同一份 MoonBit 实现实时完成（`playground/` 导出层，`docs/` 页面）。
+
+- 本地预览：`node scripts/serve_pages.mjs` → <http://127.0.0.1:8080/>
+- 启用 GitHub Pages（维护者一次性）：Settings → Pages → Source = *Deploy from a branch* → `main` / `/docs`（`docs/playground.js` 已入库，零构建）；或 Actions 模式并运行 `gh workflow run pages.yml -R walkzzz/gbz185.mbt`。
+
 ## 安装
 
 ```bash

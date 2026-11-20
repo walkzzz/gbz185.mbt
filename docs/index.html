@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gbz185.mbt · GB/Z 185-2026 智能体互联（浏览器内 AIP 演示）</title>
+  <meta name="description" content="GB/Z 185-2026 智能体互联协议栈（AIP）的纯 MoonBit 实现：信封编码/校验、会话、群组扇出、形式化验证。页面内的编解码由编译到 JavaScript 的同一份 MoonBit 实现完成。" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="hero">
+    <p class="eyebrow">MoonBit · GB/Z 185-2026 智能体互联 · 零 C FFI</p>
+    <h1>gbz185.mbt</h1>
+    <p class="tagline">AIP 协议栈的纯 MoonBit 实现</p>
+    <p class="sub">
+      信封（envelope）编解码、会话收发、群组扇出与形式化验证。
+      下面的规范化与校验由编译到 JavaScript 的同一份 MoonBit 实现实时完成。
+    </p>
+    <div class="badges">
+      <span>77 / 77 测试 × 4 后端</span>
+      <span>moon prove 20 obligations</span>
+      <span>变异 12 / 12 KILLED</span>
+      <span>0.1.0</span>
+    </div>
+    <div class="links">
+      <a href="https://github.com/walkzzz/gbz185.mbt">GitHub</a>
+      <a href="https://mooncakes.io/docs/walkzzz/gbz185.mbt">mooncakes</a>
+      <a href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/TEST_REPORT.md">测试报告</a>
+      <a href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/known-gaps.md">已知边界</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>信封编码 <span class="tag">aip_make_envelope</span></h2>
+      <div class="grid2">
+        <label>sender URN <input id="sender" value="urn:agent:walkzzz:demo" /></label>
+        <label>recipient URN <input id="recipient" value="urn:agent:peer" /></label>
+        <label>seq <input id="seq" value="1" inputmode="numeric" /></label>
+        <label>timestamp <input id="timestamp" value="1700000000" inputmode="numeric" /></label>
+        <label>kind
+          <select id="kind">
+            <option value="task_request">task_request</option>
+            <option value="task_result">task_result</option>
+            <option value="event">event</option>
+            <option value="heartbeat">heartbeat</option>
+          </select>
+        </label>
+        <label>payload JSON <input id="payload" value='{"text":"hello AIP"}' /></label>
+      </div>
+      <div class="row">
+        <button data-run="encode">编码</button>
+        <button data-preset="event">预置：Event</button>
+        <button data-preset="heartbeat">预置：Heartbeat</button>
+      </div>
+      <output id="encode-out">等待编码…</output>
+    </section>
+
+    <section class="card">
+      <h2>校验与扇出 <span class="tag">aip_validate / aip_fanout_count</span></h2>
+      <label>信封 JSON（可粘贴上一步输出）
+        <textarea id="json" rows="5" spellcheck="false">{"envelope_version":"1","protocol":"aip","sender_urn":"urn:agent:a","recipient_urn":"urn:agent:b","seq":1,"timestamp":1700000000,"kind":"task_request","payload":{"text":"hi"}}</textarea>
+      </label>
+      <div class="row">
+        <button data-run="validate">校验</button>
+        <button data-run="fanout">群组扇出</button>
+      </div>
+      <label>群组成员（逗号分隔）<input id="members" value="urn:agent:m1, urn:agent:m2, urn:agent:m3" /></label>
+      <output id="check-out">等待操作…</output>
+    </section>
+
+    <section class="card">
+      <h2>序号推进 <span class="tag">aip_next_seq</span></h2>
+      <p class="hint">对应 `verify.next_seq` 的运行时投影：<code>res == prev + 1 && res &gt; prev</code>（防重放链）。</p>
+      <div class="row">
+        <label>当前 seq <input id="curseq" value="41" inputmode="numeric" /></label>
+        <button data-run="next">推进</button>
+      </div>
+      <output id="seq-out">等待推进…</output>
+    </section>
+
+    <section class="card how">
+      <h2>这是怎么在浏览器里跑的？</h2>
+      <ol>
+        <li><code>playground/</code> 是 <code>pkgtype(kind: "foreign_library")</code> 的 MoonBit 包，用 <code>#export_name</code> 导出 4 个非 raise 包装函数。</li>
+        <li><code>moon build --target js --release playground</code> 生成 <code>playground.js</code>（同一份源码也可构建为 <code>wasm-gc</code> / <code>native</code>）。</li>
+        <li>页面直接 <code>import</code> 并调用：信封规范化、版本/协议/字段校验、群组扇出计数全部本地完成。</li>
+        <li>语义由 <code>verify/</code> 的 20 条证明义务与 77 项测试守护（见测试报告）。</li>
+      </ol>
+    </section>
+  </main>
+
+  <footer>
+    <p>gbz185.mbt · MIT · GB/Z 185-2026 智能体互联</p>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
