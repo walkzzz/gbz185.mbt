@@ -111,8 +111,20 @@ moon coverage report -f full_summary <9 个核心包 trace>
 
 ## 6. 页面与演示
 
-- `node scripts/check_pages.mjs`：**131 项 PASS**（结构 / 旧钩子保留 / 新钩子 / 11 导出 / AIP 编解码与匹配语义 / 版本与口径）。
+- `node scripts/check_pages.mjs`：**141 项 PASS**（结构 / 移动端导航 / 旧钩子保留 / 新钩子 / 11 导出 / AIP 编解码与匹配语义 / 版本与口径）。
 - `playground` 导出 11 个非 raise 函数：`aip_make_envelope`、`aip_validate`、`aip_fanout_count`、`aip_next_seq`、`aip_envelope_meta`、`aip_protocol_flow`、`capability_report`、`discovery_match`、`identity_aic_check`、`route_resolve`、`tool_descriptor_check`。
+
+### 0.2.1 页面测试报告整改（F1–F4）
+
+| 编号 | 问题 | 修复 |
+| --- | --- | --- |
+| F1 | ≤960px 顶部导航整块消失 | 新增 `#nav-toggle` 汉堡按钮 + `.nav.open` 抽屉（`aria-expanded` / Escape / 点链接 / resize 关闭） |
+| F2 | `Number(...)|0` 造成 int32 回绕与精度失真 | 移除 `|0`；`Number.isSafeInteger` + int32 范围前置校验；越界给出错误提示；页面标注「int32 演示范围」 |
+| F3 | 空 URN / seq=0 被判合法 | `aip_make_envelope` 拒绝空 URN、seq ≤ 0、timestamp < 0；`aip_validate` 增加取值语义（非空 URN、seq > 0、timestamp ≥ 0） |
+| F4 | 扇出 0 成员返回成功 | `aip_fanout_count` 空成员返回 **-2**；页面显示「空群组拒绝（与路由卡同口径）」 |
+
+- 页检：131 → **141**（新增移动端导航 3 项、int32 提示 1 项、空 URN/seq=0/-2 语义 5 项等）。
+- E2E：17 → **26**（新增 939px 窄屏导航 5 项 + 边界输入 3 项 + 修复恢复 1 项）。
 
 ## 7. 结论
 

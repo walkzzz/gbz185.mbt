@@ -48,7 +48,7 @@ moon test  --target native            # 124/124
 moon test  --target js                # 117/117（wasm / wasm-gc 同）
 moon bench --target native            # 4 项基准
 moon run scripts/mutation_test.mbtx   # 19/19 KILLED
-node scripts/check_pages.mjs          # 131 项
+node scripts/check_pages.mjs          # 141 项
 bash scripts/local_ci.sh --quick      # 本地 CI（含 prove）
 ```
 

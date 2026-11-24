@@ -44,6 +44,18 @@ pub fn aip_make_envelope(
   kind : String,
   payload_json : String,
 ) -> String {
+  if sender.trim(chars=" ").length() == 0 {
+    return error_json("sender URN required")
+  }
+  if recipient.trim(chars=" ").length() == 0 {
+    return error_json("recipient URN required")
+  }
+  if seq <= 0 {
+    return error_json("seq must be positive (1..2147483647)")
+  }
+  if timestamp < 0 {
+    return error_json("timestamp must be non-negative")
+  }
   let kind = match @aip.MessageKind::from_wire(kind) {
     Some(k) => k
     None => return error_json("unknown kind: \{kind}")
@@ -64,26 +76,36 @@ pub fn aip_make_envelope(
 }
 
 ///|
-/// 校验 AIP 信封 JSON（版本/协议/字段/消息类型）
+/// 校验 AIP 信封 JSON（版本/协议/字段/消息类型 + 取值语义）
+/// Validate an AIP envelope: structure (version/protocol/fields/kind) plus value semantics
+/// (non-empty sender/recipient, seq > 0, timestamp >= 0).
 #export_name("aip_validate")
 pub fn aip_validate(json : String) -> Bool {
   try {
     let parsed = @json.parse(json)
-    let _ = @aip.AipEnvelope::from_json(parsed)
-    true
+    let env = @aip.AipEnvelope::from_json(parsed)
+    env.sender_urn.trim(chars=" ").length() > 0 &&
+    env.recipient_urn.trim(chars=" ").length() > 0 &&
+    env.seq > 0L &&
+    env.timestamp >= 0L
   } catch {
     _ => false
   }
 }
 
 ///|
-/// 群组扇出：返回展开后的信封数（成员以逗号分隔）
+/// 群组扇出：返回展开后的信封数（成员以逗号分隔）。
+/// 返回值：>=0 扇出数；-1 信封非法；-2 无成员（与路由卡「空群组拒绝」口径一致）。
 #export_name("aip_fanout_count")
 pub fn aip_fanout_count(json : String, members_csv : String) -> Int32 {
   try {
     let parsed = @json.parse(json)
     let env = @aip.AipEnvelope::from_json(parsed)
-    @aip.fanout(env, split_csv(members_csv)[:]).length()
+    let members = split_csv(members_csv)
+    if members.length() == 0 {
+      return -2
+    }
+    @aip.fanout(env, members[:]).length()
   } catch {
     _ => -1
   }
@@ -136,6 +158,9 @@ pub fn aip_protocol_flow(
     _ => return error_json("invalid payload JSON")
   }
   let peer_urns = split_csv(peers_csv)
+  if node_urn.trim(chars=" ").length() == 0 {
+    return error_json("node URN required")
+  }
   if peer_urns.length() == 0 {
     return error_json("at least one peer URN required")
   }

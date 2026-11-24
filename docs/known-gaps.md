@@ -21,6 +21,7 @@
 | GAP-4 | 协议栈为库形态：不含协议端点服务、编码侧与 UI | 集成方预期 | 定位即库；服务端组装属上层应用 |
 | GAP-8 | 审计事件为内存数组，进程退出即失 | 生产审计 | 持久化属上层职责 |
 | GAP-9 | 覆盖率未覆盖的 72 个插桩点集中在错误渲染分支、`protocol` 错误路径与 mock 防御分支 | 覆盖率上限 | 0.3.0 目标 ≥95%；不影响已测语义 |
+| GAP-10 | 演示层数字参数为 **int32 范围**（seq 1..2147483646 / timestamp 0..2147483647）；越界由页面与 playground 双侧拒绝，不回绕 | 浏览器演示数值边界 | 文案标注「int32 演示范围」；i64 语义由 `verify` 证明覆盖（0.2.1 修复 `|0` 截断） |
 
 ## 测试口径
 
@@ -29,4 +30,4 @@
 - 变异：**19/19 KILLED**（`scripts/mutation_test.mbtx`）。
 - 基准（2026-11-24，native release）：dispatch 122.98ns / registry_lookup 81.13ns / envelope 往返 1.56µs / find_by_capability 101.59µs（1000 节点 × 8 需求）。
 - 证明：**20 obligations / 13 verified functions**（2026-11-19，WSL + Z3 4.8.12）。
-- 页面：`node scripts/check_pages.mjs` **131 项 PASS**。
+- 页面：`node scripts/check_pages.mjs` **141 项 PASS**；CDP 真实浏览器 E2E **26 项 PASS**（含 939px 窄屏导航与 int32 越界拒绝）。

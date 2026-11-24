@@ -75,6 +75,39 @@ if (themeToggle) {
   applyTheme(document.documentElement.dataset.theme === "light" ? "light" : "dark");
 }
 
+/* ---------- 窄屏导航（≤960px 汉堡菜单） ---------- */
+
+const navToggle = $("#nav-toggle");
+const siteNav = $("#site-nav");
+
+function closeNav() {
+  if (!siteNav) return;
+  siteNav.classList.remove("open");
+  if (navToggle) {
+    navToggle.setAttribute("aria-expanded", "false");
+    navToggle.setAttribute("aria-label", "打开导航");
+    navToggle.title = "打开导航";
+  }
+}
+
+if (navToggle && siteNav) {
+  navToggle.addEventListener("click", () => {
+    const open = siteNav.classList.toggle("open");
+    navToggle.setAttribute("aria-expanded", open ? "true" : "false");
+    navToggle.setAttribute("aria-label", open ? "关闭导航" : "打开导航");
+    navToggle.title = navToggle.getAttribute("aria-label");
+  });
+  siteNav.querySelectorAll("a").forEach((link) => {
+    link.addEventListener("click", closeNav);
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeNav();
+  });
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 960) closeNav();
+  });
+}
+
 /* ---------- 演示动作 ---------- */
 
 function runEncode() {
@@ -88,7 +121,19 @@ function runEncode() {
     showBad("#encode-out", '{"ok":false,"error":"seq / timestamp 必须是数字"}');
     return;
   }
-  const text = aip_make_envelope(sender, recipient, seq | 0, timestamp | 0, kind, payload);
+  if (sender.length === 0 || recipient.length === 0) {
+    showBad("#encode-out", '{"ok":false,"error":"sender / recipient URN 不能为空"}');
+    return;
+  }
+  if (!Number.isSafeInteger(seq) || seq < 1 || seq > 2147483647) {
+    showBad("#encode-out", '{"ok":false,"error":"seq 必须是 1..2147483647 的整数（int32 演示范围）"}');
+    return;
+  }
+  if (!Number.isSafeInteger(timestamp) || timestamp < 0 || timestamp > 2147483647) {
+    showBad("#encode-out", '{"ok":false,"error":"timestamp 必须是 0..2147483647 的整数（int32 演示范围）"}');
+    return;
+  }
+  const text = aip_make_envelope(sender, recipient, seq, timestamp, kind, payload);
   if (isError(text)) {
     showBad("#encode-out", text);
     return;
@@ -110,6 +155,8 @@ function runFanout() {
   const n = aip_fanout_count($("#json").value, $("#members").value);
   if (n >= 0) {
     showOk("#check-out", JSON.stringify({ ok: true, fanout_count: n }));
+  } else if (n === -2) {
+    showBad("#check-out", '{"ok":false,"error":"没有成员可扇出（空群组拒绝，与路由卡同口径）"}');
   } else {
     showBad("#check-out", '{"ok":false,"error":"无法扇出：信封非法"}');
   }
@@ -117,11 +164,11 @@ function runFanout() {
 
 function runNext() {
   const cur = Number($("#curseq").value);
-  if (!Number.isFinite(cur)) {
-    showBad("#seq-out", '{"ok":false,"error":"seq 必须是数字"}');
+  if (!Number.isSafeInteger(cur) || cur < 1 || cur >= 2147483647) {
+    showBad("#seq-out", '{"ok":false,"error":"seq 必须是 1..2147483646 的整数（int32 演示范围，保证 +1 不回绕）"}');
     return;
   }
-  const next = aip_next_seq(cur | 0);
+  const next = aip_next_seq(cur);
   showOk("#seq-out", JSON.stringify({ ok: true, prev: cur, next, monotonic: next > cur }));
 }
 

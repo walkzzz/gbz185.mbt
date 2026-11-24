@@ -45,6 +45,10 @@ check('hero card live status', html.includes('id="hero-status"') && html.include
 check('12 capability cards', (html.match(/class="feature"/g) || []).length === 12, `${(html.match(/class="feature"/g) || []).length}`);
 check('10 demo cards', (html.match(/<article class="card">/g) || []).length === 10, `${(html.match(/<article class="card">/g) || []).length}`);
 check('copy targets >= 6', (html.match(/data-copy-target="/g) || []).length >= 6);
+check('mobile nav toggle present', html.includes('id="nav-toggle"') && html.includes('aria-controls="site-nav"') && html.includes('id="site-nav"'));
+check('mobile nav drawer css', css.includes('.nav.open { display: flex; }'));
+check('mobile nav js bound', app.includes('nav-toggle') && app.includes('closeNav'));
+check('int32 demo-range hint', html.includes('int32 演示范围'));
 
 /* ---------- 既有钩子保持（不打断旧演示与 E2E） ---------- */
 
@@ -145,6 +149,12 @@ check('unknown kind folds to error json', pg.aip_make_envelope('a', 'b', 1, 1, '
 check('invalid payload json folds to error', pg.aip_make_envelope('a', 'b', 1, 1, 'event', '{bad').includes('"ok":false'));
 check('fanout expands 3 members', pg.aip_fanout_count(envelope, 'urn:agent:m1, urn:agent:m2, urn:agent:m3') === 3);
 check('fanout on invalid json = -1', pg.aip_fanout_count('{}', 'a,b') === -1);
+check('fanout with no members = -2', pg.aip_fanout_count(envelope, '  ') === -2);
+check('empty sender rejected at encode', pg.aip_make_envelope('', 'urn:agent:b', 1, 1, 'event', '{}').includes('"ok":false'));
+check('non-positive seq rejected at encode', pg.aip_make_envelope('a', 'b', 0, 1, 'event', '{}').includes('"ok":false'));
+check('negative timestamp rejected', pg.aip_make_envelope('a', 'b', 1, -1, 'event', '{}').includes('"ok":false'));
+check('validate rejects empty sender', pg.aip_validate(envelope.replace('"sender_urn":"urn:agent:a"', '"sender_urn":""')) === false);
+check('validate rejects seq 0', pg.aip_validate(envelope.replace('"seq":1', '"seq":0')) === false);
 check('next_seq(41) = 42', pg.aip_next_seq(41) === 42);
 
 const meta = JSON.parse(pg.aip_envelope_meta(envelope));

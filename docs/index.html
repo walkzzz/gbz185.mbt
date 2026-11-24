@@ -30,9 +30,9 @@
       <a class="brand" href="#top">
         <span class="brand-mark" aria-hidden="true">185</span>
         <span class="brand-name">gbz185.mbt</span>
-        <span class="brand-ver">v0.2.0</span>
+        <span class="brand-ver">v0.2.1</span>
       </a>
-      <nav class="nav" aria-label="主导航">
+      <nav id="site-nav" class="nav" aria-label="主导航">
         <a href="#features">能力</a>
         <a href="#demo">在线演示</a>
         <a href="#start">快速开始</a>
@@ -41,6 +41,7 @@
         <a href="#docs">文档</a>
       </nav>
       <div class="topbar-actions">
+        <button id="nav-toggle" class="icon-btn nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="打开导航" title="打开导航">☰</button>
         <button id="theme-toggle" class="icon-btn" type="button" title="切换深浅主题" aria-label="切换深浅主题">◐</button>
         <a class="gh-btn" href="https://github.com/walkzzz/gbz185.mbt" target="_blank" rel="noreferrer">GitHub</a>
       </div>
@@ -146,14 +147,14 @@
             <h3>信封编码</h3>
             <a class="pkg-link" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/architecture.md" target="_blank" rel="noreferrer"><code>aip_make_envelope</code></a>
           </header>
-          <p class="hint">构造 GB/Z 185.6 规范化信封：版本/协议/序号/时间戳/消息类型/载荷。</p>
+          <p class="hint">构造 GB/Z 185.6 规范化信封：版本/协议/序号/时间戳/消息类型/载荷。sender/recipient 必须非空、seq ≥ 1、timestamp ≥ 0；数字参数为 <strong>int32 演示范围</strong>（i64 语义由库内 <code>verify</code> 证明覆盖）。</p>
           <div class="row">
             <label class="grow">sender URN <input id="sender" value="urn:agent:walkzzz:demo" /></label>
             <label class="grow">recipient URN <input id="recipient" value="urn:agent:peer" /></label>
           </div>
           <div class="row">
-            <label>seq <input id="seq" value="1" inputmode="numeric" /></label>
-            <label>timestamp <input id="timestamp" value="1700000000" inputmode="numeric" /></label>
+            <label>seq <input id="seq" value="1" inputmode="numeric" min="1" step="1" /></label>
+            <label>timestamp <input id="timestamp" value="1700000000" inputmode="numeric" min="0" step="1" /></label>
             <label>kind
               <select id="kind">
                 <option value="task_request">task_request</option>
@@ -179,7 +180,7 @@
             <h3>校验与扇出</h3>
             <a class="pkg-link" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/TEST_REPORT.md" target="_blank" rel="noreferrer"><code>aip_validate · aip_fanout_count</code></a>
           </header>
-          <p class="hint">校验版本/协议/字段/消息类型；群组扇出把 recipient 替换为每个成员。</p>
+          <p class="hint">校验 = 结构（版本/协议/字段/kind）+ 取值语义（非空 URN、seq &gt; 0、timestamp ≥ 0）；群组扇出把 recipient 替换为每个成员，<strong>0 成员会被拒绝</strong>（与路由卡同口径）。</p>
           <label>信封 JSON（可粘贴上一步输出）
             <textarea id="json" rows="5" spellcheck="false">{"envelope_version":"1","protocol":"aip","sender_urn":"urn:agent:a","recipient_urn":"urn:agent:b","seq":1,"timestamp":1700000000,"kind":"task_request","payload":{"text":"hi"}}</textarea>
           </label>
@@ -213,9 +214,9 @@
             <h3>序号推进</h3>
             <a class="pkg-link" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/migration.md" target="_blank" rel="noreferrer"><code>aip_next_seq</code></a>
           </header>
-          <p class="hint">对应 <code>verify.next_seq</code>：<code>res == prev + 1 &amp;&amp; res &gt; prev</code>（防重放链）。</p>
+          <p class="hint">对应 <code>verify.next_seq</code>：<code>res == prev + 1 &amp;&amp; res &gt; prev</code>（防重放链）。演示参数限定 int32 且 seq ≥ 1，超出范围会给出错误提示而非回绕。</p>
           <div class="row">
-            <label class="grow">当前 seq <input id="curseq" value="41" inputmode="numeric" /></label>
+            <label class="grow">当前 seq <input id="curseq" value="41" inputmode="numeric" min="1" step="1" /></label>
             <button type="button" data-run="next">推进</button>
           </div>
           <div id="seq-out" class="out" aria-live="polite">等待推进…</div>
@@ -354,7 +355,7 @@
         <div class="start-col">
           <div class="code">
             <div class="code-head"><span>安装</span><button type="button" class="copy" data-copy-target="cmd-install">复制</button></div>
-            <pre id="cmd-install"><code>moon add walkzzz/gbz185.mbt@0.2.0
+            <pre id="cmd-install"><code>moon add walkzzz/gbz185.mbt@0.2.1
 moon update</code></pre>
           </div>
           <div class="code">
@@ -466,6 +467,7 @@ let desc = ToolRegistry::lookup(tools, "net_fetch")</code></pre>
         <p><strong>性能实测</strong>：dispatch 122.98 ns、registry_lookup 81.13 ns、envelope 往返 1.56 µs、能力检索（1000 节点 × 8 需求）101.59 µs（native release，2026-11-24）。</p>
         <p><strong>防重放</strong>：<code>next_seq</code> 与 <code>inbox_advance</code> 由 Z3 证明，并在 <code>dispatch</code> / <code>receive</code> 真实调用；群组扇出各对端序号空间独立。</p>
         <p><strong>演示口径</strong>：页面所有结果来自 <code>playground</code> 导出（11 个函数），与库同一份源码；发布后另有真实浏览器验收。</p>
+        <p><strong>演示参数</strong>：seq / timestamp 为 <strong>int32 演示范围</strong>；越界输入直接给出错误提示而非回绕；i64 语义由库内 <code>verify.next_seq</code> / <code>inbox_advance</code> 的证明义务覆盖。</p>
       </div>
     </section>
 

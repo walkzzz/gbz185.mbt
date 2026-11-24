@@ -88,6 +88,7 @@ code {
 .icon-btn { width: 34px; height: 34px; padding: 0; border: 1px solid var(--border); border-radius: 9px; background: var(--panel); color: var(--muted); font-size: 15px; cursor: pointer; }
 .gh-btn { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border: 1px solid var(--border); border-radius: 9px; background: var(--panel); color: var(--text); font-size: 13px; font-weight: 600; }
 .gh-btn:hover { text-decoration: none; border-color: var(--border-strong); }
+.nav-toggle { display: none; }
 
 /* Hero */
 .hero { display: grid; grid-template-columns: minmax(0, 1.06fr) minmax(0, 0.94fr); gap: 56px; align-items: center; max-width: 1180px; margin: 0 auto; padding: 72px 24px 56px; }
@@ -204,7 +205,24 @@ tbody tr:hover { background: var(--panel-alt); }
 @media (max-width: 960px) {
   .hero { grid-template-columns: minmax(0, 1fr); gap: 36px; padding-top: 52px; }
   .hero-card { max-width: 560px; }
-  .nav { display: none; }
+  .nav-toggle { display: inline-grid; }
+  .nav {
+    display: none;
+    position: absolute;
+    top: var(--topbar-h);
+    left: 0;
+    right: 0;
+    z-index: 45;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    padding: 10px 18px 14px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow-md);
+  }
+  .nav.open { display: flex; }
+  .nav a { padding: 10px 12px; font-size: 15px; border-radius: 8px; }
 }
 @media (max-width: 720px) {
   .topbar-inner, .hero, .section, .footer-inner { padding-left: 18px; padding-right: 18px; }

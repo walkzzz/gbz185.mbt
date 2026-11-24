@@ -2,6 +2,20 @@
 
 本项目的所有显著变更记录于此文件。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [语义化版本 2.0.0](https://semver.org/spec/v2.0.0.html)。
 
+## [0.2.1] - 2026-11-24
+
+### Fixed — 页面测试报告 F1–F4
+
+- **F1 窄屏导航**：≤960px 新增汉堡按钮（`#nav-toggle`）+ 抽屉导航（`.nav.open`），含 `aria-expanded`、Escape/点链接/resize 关闭。
+- **F2 演示层 int32 截断**：移除 `Number(x) | 0`，改为 `Number.isSafeInteger` + int32 范围前置校验；越界返回错误而非回绕；页面与 playground 文档标注「int32 演示范围」。
+- **F3 空 URN / seq=0**：`aip_make_envelope` 拒绝空 sender/recipient、seq ≤ 0、timestamp < 0；`aip_validate` 增加取值语义校验（非空 URN、seq > 0、timestamp ≥ 0）。
+- **F4 扇出 0 成员**：`aip_fanout_count` 返回 **-2**；页面提示「空群组拒绝（与路由卡同口径）」。
+
+### Quality
+
+- 页面门禁 131 → **141**；CDP E2E 17 → **26**（新增 939px 窄屏导航 5 项、边界输入 3 项、修复恢复 1 项）。
+- 测试 / 变异 / 覆盖率口径不变（124 / 117×3；19/19；811/883）。
+
 ## [0.2.0] - 2026-11-24
 
 ### Added — API 扩充（纯增量，无破坏）
