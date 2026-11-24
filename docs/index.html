@@ -30,7 +30,7 @@
       <a class="brand" href="#top">
         <span class="brand-mark" aria-hidden="true">185</span>
         <span class="brand-name">gbz185.mbt</span>
-        <span class="brand-ver">v0.2.1</span>
+        <span class="brand-ver">v0.2.2</span>
       </a>
       <nav id="site-nav" class="nav" aria-label="主导航">
         <a href="#features">能力</a>
@@ -147,7 +147,7 @@
             <h3>信封编码</h3>
             <a class="pkg-link" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/architecture.md" target="_blank" rel="noreferrer"><code>aip_make_envelope</code></a>
           </header>
-          <p class="hint">构造 GB/Z 185.6 规范化信封：版本/协议/序号/时间戳/消息类型/载荷。sender/recipient 必须非空、seq ≥ 1、timestamp ≥ 0；数字参数为 <strong>int32 演示范围</strong>（i64 语义由库内 <code>verify</code> 证明覆盖）。</p>
+          <p class="hint">构造 GB/Z 185.6 规范化信封：版本/协议/序号/时间戳/消息类型/载荷。sender/recipient 必须是 <strong>合法 URN</strong>（<code>urn:</code> 前缀、≤256 字符、字符集 <code>[A-Za-z0-9._:-]</code>），seq ≥ 1、timestamp ≥ 0；数字参数为 <strong>int32 演示范围</strong>（i64 语义由库内 <code>verify</code> 证明覆盖）。</p>
           <div class="row">
             <label class="grow">sender URN <input id="sender" value="urn:agent:walkzzz:demo" /></label>
             <label class="grow">recipient URN <input id="recipient" value="urn:agent:peer" /></label>
@@ -180,7 +180,7 @@
             <h3>校验与扇出</h3>
             <a class="pkg-link" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/TEST_REPORT.md" target="_blank" rel="noreferrer"><code>aip_validate · aip_fanout_count</code></a>
           </header>
-          <p class="hint">校验 = 结构（版本/协议/字段/kind）+ 取值语义（非空 URN、seq &gt; 0、timestamp ≥ 0）；群组扇出把 recipient 替换为每个成员，<strong>0 成员会被拒绝</strong>（与路由卡同口径）。</p>
+          <p class="hint">校验 = 结构（版本/协议/字段/kind）+ 取值语义（<strong>合法 URN</strong>、seq &gt; 0、timestamp ≥ 0）；群组扇出把 recipient 替换为每个成员，<strong>0 成员会被拒绝</strong>，<strong>重复成员按 URN 去重</strong>（与路由卡同口径，明细含 raw/unique）。</p>
           <label>信封 JSON（可粘贴上一步输出）
             <textarea id="json" rows="5" spellcheck="false">{"envelope_version":"1","protocol":"aip","sender_urn":"urn:agent:a","recipient_urn":"urn:agent:b","seq":1,"timestamp":1700000000,"kind":"task_request","payload":{"text":"hi"}}</textarea>
           </label>
@@ -322,7 +322,7 @@
             <h3>工具描述</h3>
             <a class="pkg-link" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/architecture.md" target="_blank" rel="noreferrer"><code>tool_descriptor_check</code></a>
           </header>
-          <p class="hint">校验 ToolDescriptor 并生成 MCP tools/list 单源条目（name/description/inputSchema）。</p>
+          <p class="hint">校验 ToolDescriptor 并生成 MCP tools/list 单源条目（name/description/inputSchema）。<strong>name 需匹配 <code>[A-Za-z0-9_-]{1,64}</code></strong>，description 非空且 ≤1024 字符（与真实 MCP 宿主口径一致）。</p>
           <div class="row">
             <label class="grow">工具名 <input id="tool-name" value="net_fetch" /></label>
             <label class="grow">描述 <input id="tool-desc" value="fetch a URL" /></label>
@@ -355,7 +355,7 @@
         <div class="start-col">
           <div class="code">
             <div class="code-head"><span>安装</span><button type="button" class="copy" data-copy-target="cmd-install">复制</button></div>
-            <pre id="cmd-install"><code>moon add walkzzz/gbz185.mbt@0.2.1
+            <pre id="cmd-install"><code>moon add walkzzz/gbz185.mbt@0.2.2
 moon update</code></pre>
           </div>
           <div class="code">

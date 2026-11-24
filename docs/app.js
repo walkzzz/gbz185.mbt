@@ -1,7 +1,7 @@
 import {
   aip_make_envelope,
   aip_validate,
-  aip_fanout_count,
+  aip_fanout_detail,
   aip_next_seq,
   aip_envelope_meta,
   aip_protocol_flow,
@@ -152,14 +152,8 @@ function runValidate() {
 }
 
 function runFanout() {
-  const n = aip_fanout_count($("#json").value, $("#members").value);
-  if (n >= 0) {
-    showOk("#check-out", JSON.stringify({ ok: true, fanout_count: n }));
-  } else if (n === -2) {
-    showBad("#check-out", '{"ok":false,"error":"没有成员可扇出（空群组拒绝，与路由卡同口径）"}');
-  } else {
-    showBad("#check-out", '{"ok":false,"error":"无法扇出：信封非法"}');
-  }
+  const text = aip_fanout_detail($("#json").value, $("#members").value);
+  (isError(text) ? showBad : showOk)("#check-out", text);
 }
 
 function runNext() {

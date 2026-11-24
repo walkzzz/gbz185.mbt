@@ -69,5 +69,5 @@
 | 形式化验证 | `verify/` proof_enabled（20 obligations / 13 functions） | ✅ |
 | 变异测试 | `scripts/mutation_test.mbtx`（19/19 KILLED） | ✅ |
 | 覆盖率 | `moon coverage report`（811/883 = 91.8%） | ✅ |
-| 页面门禁 | `scripts/check_pages.mjs`（141 项） | ✅ |
+| 页面门禁 | `scripts/check_pages.mjs`（159 项） | ✅ |
 | 浏览器验收 | CDP E2E（本地/线上，26 项，含 939px 窄屏导航） | ✅（见 TEST_REPORT §6） |

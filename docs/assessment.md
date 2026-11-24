@@ -34,5 +34,5 @@
 
 1. **定位**：作为团队「智能体互联协议资产」纳入内部依赖清单，按 SemVer 维护（当前 0.x，契约冻结靠 mbti）。
 2. **采纳方式**：优先在需要多智能体交互的项目中使用 `aip` + `registry` + `discovery`；传输层按需引入 `transport_async`。
-3. **验收门槛**：`local_ci.sh --quick` 全绿 + 变异矩阵全 KILLED + `check_pages.mjs` 141 项通过。
+3. **验收门槛**：`local_ci.sh --quick` 全绿 + 变异矩阵全 KILLED + `check_pages.mjs` 159 项通过。
 4. **后续版本**：0.3.0 评估 MQ 分发与国密套件；首个 1.0 前完成跨版本兼容实证（两版并存升级路径）。

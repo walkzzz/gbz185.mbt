@@ -2,6 +2,24 @@
 
 本项目的所有显著变更记录于此文件。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [语义化版本 2.0.0](https://semver.org/spec/v2.0.0.html)。
 
+## [0.2.2] - 2026-11-24
+
+### Fixed — 第二轮页面测试报告 R1–R4
+
+- **R1 元数据卡取值口径**：`aip_envelope_meta` 与 `aip_validate` 同口径（合法 URN、`seq > 0`、`timestamp ≥ 0`）；`seq:0` 不再解析成功。
+- **R2 URN 格式**：新增简化 URN 校验（`urn:` 前缀、≤256 字符、`[A-Za-z0-9._:-]`），应用于编码 / 校验 / 完整流程 / 元数据；非法 URN 返回明确错误。
+- **R3 扇出去重**：`aip_fanout_count` 按 URN 去重（与路由卡同口径）；新增 `aip_fanout_detail`（`raw_count` / `fanout_count` / `duplicates_dropped` / `members`）。
+- **R4 MCP 工具名规范**：`tool_descriptor_check` 校验 name `[A-Za-z0-9_-]{1,64}`、description 非空且 ≤1024。
+
+### Changed
+
+- 页面：扇出卡改用 `aip_fanout_detail`（显示原始/去重计数）；编码 / 校验 / 工具卡提示 URN 格式与 MCP 命名规范；移动菜单 `z-index: 60` 且展开时关闭顶栏 blur（R5 截图合成缓解，真机目视待用户）。
+
+### Quality
+
+- 演示导出 11 → **12**（`aip_fanout_detail`）；页面门禁 141 → **159**；CDP E2E 26 → **30**（非法 URN、meta seq=0、扇出去重、工具名规范）。
+- 测试 / 变异 / 覆盖率口径不变（native 124、js 117×3；19/19；811/883）。
+
 ## [0.2.1] - 2026-11-24
 
 ### Fixed — 页面测试报告 F1–F4

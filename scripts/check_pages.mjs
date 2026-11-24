@@ -49,6 +49,10 @@ check('mobile nav toggle present', html.includes('id="nav-toggle"') && html.incl
 check('mobile nav drawer css', css.includes('.nav.open { display: flex; }'));
 check('mobile nav js bound', app.includes('nav-toggle') && app.includes('closeNav'));
 check('int32 demo-range hint', html.includes('int32 演示范围'));
+check('urn format hint', html.includes('合法 URN') && html.includes('[A-Za-z0-9._:-]'));
+check('fanout dedup hint', html.includes('重复成员按 URN 去重'));
+check('mcp name hint', html.includes('[A-Za-z0-9_-]{1,64}'));
+check('mobile drawer layering', css.includes(':has(.nav.open)'));
 
 /* ---------- 既有钩子保持（不打断旧演示与 E2E） ---------- */
 
@@ -92,6 +96,7 @@ for (const anchor of ['features', 'demo', 'start', 'api', 'quality', 'docs', 'ho
 const mod = readFileSync(join(ROOT, 'moon.mod'), 'utf8');
 const version = (mod.match(/version\s*=\s*"([^"]+)"/) || [])[1] || '';
 check('version matches moon.mod', version.length > 0 && html.includes(version), version);
+check('version is 0.2.2', version === '0.2.2', version);
 check('badge numbers: tests 124 / 117 x 3', html.includes('124') && html.includes('117'));
 check('badge numbers: mutation 19 / 19', html.includes('19 / 19'));
 check('coverage number 91.8%', html.includes('91.8%'));
@@ -121,6 +126,7 @@ const exportsList = [
   'aip_make_envelope',
   'aip_validate',
   'aip_fanout_count',
+  'aip_fanout_detail',
   'aip_next_seq',
   'aip_envelope_meta',
   'aip_protocol_flow',
@@ -145,15 +151,23 @@ const envelope = pg.aip_make_envelope(
 check('envelope has version 1 + protocol aip', envelope.includes('"envelope_version":"1"') && envelope.includes('"protocol":"aip"'));
 check('envelope round-trips validation', pg.aip_validate(envelope) === true);
 check('empty object rejected', pg.aip_validate('{}') === false);
-check('unknown kind folds to error json', pg.aip_make_envelope('a', 'b', 1, 1, 'bogus', '{}').includes('"ok":false'));
-check('invalid payload json folds to error', pg.aip_make_envelope('a', 'b', 1, 1, 'event', '{bad').includes('"ok":false'));
+check('unknown kind folds to error json', pg.aip_make_envelope('urn:agent:a', 'urn:agent:b', 1, 1, 'bogus', '{}').includes('"ok":false'));
+check('invalid payload json folds to error', pg.aip_make_envelope('urn:agent:a', 'urn:agent:b', 1, 1, 'event', '{bad').includes('"ok":false'));
 check('fanout expands 3 members', pg.aip_fanout_count(envelope, 'urn:agent:m1, urn:agent:m2, urn:agent:m3') === 3);
 check('fanout on invalid json = -1', pg.aip_fanout_count('{}', 'a,b') === -1);
 check('fanout with no members = -2', pg.aip_fanout_count(envelope, '  ') === -2);
+check('fanout dedups duplicate members', pg.aip_fanout_count(envelope, 'urn:agent:m1, urn:agent:m1, urn:agent:m2') === 2);
+const fanoutDetail = JSON.parse(pg.aip_fanout_detail(envelope, 'urn:agent:m1, urn:agent:m1, urn:agent:m2'));
+check('fanout detail raw vs unique', fanoutDetail.raw_count === 3 && fanoutDetail.fanout_count === 2 && fanoutDetail.duplicates_dropped === 1, JSON.stringify(fanoutDetail));
+check('fanout detail lists unique members', fanoutDetail.members.length === 2);
+check('fanout detail rejects empty members', JSON.parse(pg.aip_fanout_detail(envelope, '')).ok === false);
 check('empty sender rejected at encode', pg.aip_make_envelope('', 'urn:agent:b', 1, 1, 'event', '{}').includes('"ok":false'));
-check('non-positive seq rejected at encode', pg.aip_make_envelope('a', 'b', 0, 1, 'event', '{}').includes('"ok":false'));
-check('negative timestamp rejected', pg.aip_make_envelope('a', 'b', 1, -1, 'event', '{}').includes('"ok":false'));
+check('invalid urn rejected at encode', pg.aip_make_envelope('not-a-urn', 'urn:agent:b', 1, 1, 'event', '{}').includes('"ok":false'));
+check('urn with space rejected', pg.aip_make_envelope('urn:agent:a b', 'urn:agent:b', 1, 1, 'event', '{}').includes('"ok":false'));
+check('non-positive seq rejected at encode', pg.aip_make_envelope('urn:agent:a', 'urn:agent:b', 0, 1, 'event', '{}').includes('"ok":false'));
+check('negative timestamp rejected', pg.aip_make_envelope('urn:agent:a', 'urn:agent:b', 1, -1, 'event', '{}').includes('"ok":false'));
 check('validate rejects empty sender', pg.aip_validate(envelope.replace('"sender_urn":"urn:agent:a"', '"sender_urn":""')) === false);
+check('validate rejects invalid urn', pg.aip_validate(envelope.replace('"sender_urn":"urn:agent:a"', '"sender_urn":"not-a-urn"')) === false);
 check('validate rejects seq 0', pg.aip_validate(envelope.replace('"seq":1', '"seq":0')) === false);
 check('next_seq(41) = 42', pg.aip_next_seq(41) === 42);
 
@@ -161,6 +175,8 @@ const meta = JSON.parse(pg.aip_envelope_meta(envelope));
 check('envelope meta exposes sender/recipient', meta.sender_urn === 'urn:agent:a' && meta.recipient_urn === 'urn:agent:b');
 check('envelope meta message_id is sender#seq', meta.message_id === 'urn:agent:a#1', meta.message_id);
 check('envelope meta invalid json folds', JSON.parse(pg.aip_envelope_meta('{bad')).ok === false);
+check('envelope meta rejects seq 0', JSON.parse(pg.aip_envelope_meta(envelope.replace('"seq":1', '"seq":0'))).ok === false);
+check('envelope meta rejects invalid urn', JSON.parse(pg.aip_envelope_meta(envelope.replace('"sender_urn":"urn:agent:a"', '"sender_urn":"x y"'))).ok === false);
 
 const flow = JSON.parse(
   pg.aip_protocol_flow('urn:agent:hero', 'urn:agent:p1, urn:agent:p2', 'task_request', '{"text":"x"}'),
@@ -211,6 +227,9 @@ check('route rejects unknown recipient', routeReject.decision === 'reject' && ro
 const tool = JSON.parse(pg.tool_descriptor_check('net_fetch', 'fetch a URL', '{"type":"object"}', 'mcp', 'server-a'));
 check('tool descriptor builds mcp entry', tool.mcp_entry.name === 'net_fetch' && tool.mcp_entry.inputSchema.type === 'object');
 check('tool descriptor rejects empty name', JSON.parse(pg.tool_descriptor_check('', 'd', '{}', 'native', '')).ok === false);
+check('tool rejects name with space', JSON.parse(pg.tool_descriptor_check('net fetch', 'd', '{}', 'native', '')).ok === false);
+check('tool rejects long name', JSON.parse(pg.tool_descriptor_check('n'.repeat(65), 'd', '{}', 'native', '')).ok === false);
+check('tool rejects long description', JSON.parse(pg.tool_descriptor_check('t', 'd'.repeat(1025), '{}', 'native', '')).ok === false);
 
 /* ---------- 汇总 ---------- */
 

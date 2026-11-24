@@ -6,6 +6,8 @@ pub fn aip_envelope_meta(String) -> String
 
 pub fn aip_fanout_count(String, String) -> Int32
 
+pub fn aip_fanout_detail(String, String) -> String
+
 pub fn aip_make_envelope(String, String, Int32, Int32, String, String) -> String
 
 pub fn aip_next_seq(Int32) -> Int32

@@ -111,8 +111,8 @@ moon coverage report -f full_summary <9 个核心包 trace>
 
 ## 6. 页面与演示
 
-- `node scripts/check_pages.mjs`：**141 项 PASS**（结构 / 移动端导航 / 旧钩子保留 / 新钩子 / 11 导出 / AIP 编解码与匹配语义 / 版本与口径）。
-- `playground` 导出 11 个非 raise 函数：`aip_make_envelope`、`aip_validate`、`aip_fanout_count`、`aip_next_seq`、`aip_envelope_meta`、`aip_protocol_flow`、`capability_report`、`discovery_match`、`identity_aic_check`、`route_resolve`、`tool_descriptor_check`。
+- `node scripts/check_pages.mjs`：**159 项 PASS**（结构 / 移动端导航 / 钩子 / 12 导出 / AIP 编解码、URN 格式、扇出去重、MCP 命名语义 / 版本与口径）。
+- `playground` 导出 12 个非 raise 函数：`aip_make_envelope`、`aip_validate`、`aip_fanout_count`、`aip_fanout_detail`、`aip_next_seq`、`aip_envelope_meta`、`aip_protocol_flow`、`capability_report`、`discovery_match`、`identity_aic_check`、`route_resolve`、`tool_descriptor_check`。
 
 ### 0.2.1 页面测试报告整改（F1–F4）
 
@@ -125,6 +125,19 @@ moon coverage report -f full_summary <9 个核心包 trace>
 
 - 页检：131 → **141**（新增移动端导航 3 项、int32 提示 1 项、空 URN/seq=0/-2 语义 5 项等）。
 - E2E：17 → **26**（新增 939px 窄屏导航 5 项 + 边界输入 3 项 + 修复恢复 1 项）。
+
+### 0.2.2 第二轮页面测试报告整改（R1–R4）
+
+| 编号 | 问题 | 修复 |
+| --- | --- | --- |
+| R1 | 元数据卡接受 seq=0，与校验卡口径不一致 | `aip_envelope_meta` 与 `aip_validate` 同口径（合法 URN、seq > 0、timestamp ≥ 0） |
+| R2 | URN 仅校验非空，不校验格式 | 新增简化 URN 校验（`urn:` 前缀、≤256 字符、`[A-Za-z0-9._:-]`），覆盖编码 / 校验 / 流程 / 元数据 |
+| R3 | 扇出计数不去重（与路由卡相反） | `aip_fanout_count` 按 URN 去重；新增 `aip_fanout_detail`（raw / unique / duplicates / members） |
+| R4 | 工具名缺 MCP 命名规范 | `tool_descriptor_check` 校验 name `[A-Za-z0-9_-]{1,64}`、description 非空且 ≤1024 |
+| R5 | 移动菜单浮层截图不可见（功能正常） | `z-index: 60` + 展开时关闭顶栏 `backdrop-filter`（合成层缓解）；命中测试与 aria 已由 E2E 验证，真机目视待用户 |
+
+- 页检：141 → **159**；E2E：26 → **30**（非法 URN、meta seq=0、扇出去重、工具名规范）。
+- 演示导出：11 → **12**（`aip_fanout_detail`）。
 
 ## 7. 结论
 

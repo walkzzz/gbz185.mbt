@@ -34,6 +34,66 @@ fn json_strings(items : Array[String]) -> @json.Json {
 }
 
 ///|
+/// 简化 URN 校验（RFC 8141 子集）：`urn:` 前缀、总长 ≤256、字符集 [A-Za-z0-9._:-]。
+/// Simplified URN check (RFC 8141 subset): prefix, length cap, allowed charset.
+fn is_valid_urn(s : String) -> Bool {
+  if s.length() == 0 || s.length() > 256 {
+    return false
+  }
+  if !s.has_prefix("urn:") {
+    return false
+  }
+  for ch in s {
+    let c = ch.to_int()
+    let ok = (c >= 97 && c <= 122) ||
+      (c >= 65 && c <= 90) ||
+      (c >= 48 && c <= 57) ||
+      c == 46 ||
+      c == 95 ||
+      c == 45 ||
+      c == 58
+    if !ok {
+      return false
+    }
+  }
+  true
+}
+
+///|
+/// MCP 工具名规范（[A-Za-z0-9_-]{1,64}）。
+/// MCP tool-name pattern: [A-Za-z0-9_-]{1,64}.
+fn is_valid_tool_name(s : String) -> Bool {
+  if s.length() == 0 || s.length() > 64 {
+    return false
+  }
+  for ch in s {
+    let c = ch.to_int()
+    let ok = (c >= 97 && c <= 122) ||
+      (c >= 65 && c <= 90) ||
+      (c >= 48 && c <= 57) ||
+      c == 95 ||
+      c == 45
+    if !ok {
+      return false
+    }
+  }
+  true
+}
+
+///|
+/// 保序去重（扇出/对端计数与路由卡同口径）。
+/// Order-preserving deduplication (matches routing-card semantics).
+fn dedup(items : ArrayView[String]) -> Array[String] {
+  let out : Array[String] = []
+  for item in items {
+    if !out.contains(item) {
+      out.push(item)
+    }
+  }
+  out
+}
+
+///|
 /// 构造规范化 AIP 信封 JSON（GB/Z 185.6）
 #export_name("aip_make_envelope")
 pub fn aip_make_envelope(
@@ -47,8 +107,18 @@ pub fn aip_make_envelope(
   if sender.trim(chars=" ").length() == 0 {
     return error_json("sender URN required")
   }
+  if !is_valid_urn(sender) {
+    return error_json(
+      "sender URN invalid (expect urn:... , <=256 chars, [A-Za-z0-9._:-])",
+    )
+  }
   if recipient.trim(chars=" ").length() == 0 {
     return error_json("recipient URN required")
+  }
+  if !is_valid_urn(recipient) {
+    return error_json(
+      "recipient URN invalid (expect urn:... , <=256 chars, [A-Za-z0-9._:-])",
+    )
   }
   if seq <= 0 {
     return error_json("seq must be positive (1..2147483647)")
@@ -84,8 +154,8 @@ pub fn aip_validate(json : String) -> Bool {
   try {
     let parsed = @json.parse(json)
     let env = @aip.AipEnvelope::from_json(parsed)
-    env.sender_urn.trim(chars=" ").length() > 0 &&
-    env.recipient_urn.trim(chars=" ").length() > 0 &&
+    is_valid_urn(env.sender_urn) &&
+    is_valid_urn(env.recipient_urn) &&
     env.seq > 0L &&
     env.timestamp >= 0L
   } catch {
@@ -94,7 +164,7 @@ pub fn aip_validate(json : String) -> Bool {
 }
 
 ///|
-/// 群组扇出：返回展开后的信封数（成员以逗号分隔）。
+/// 群组扇出：返回展开后的信封数（成员去重后）。
 /// 返回值：>=0 扇出数；-1 信封非法；-2 无成员（与路由卡「空群组拒绝」口径一致）。
 #export_name("aip_fanout_count")
 pub fn aip_fanout_count(json : String, members_csv : String) -> Int32 {
@@ -105,10 +175,42 @@ pub fn aip_fanout_count(json : String, members_csv : String) -> Int32 {
     if members.length() == 0 {
       return -2
     }
-    @aip.fanout(env, members[:]).length()
+    let unique = dedup(members[:])
+    @aip.fanout(env, unique[:]).length()
   } catch {
     _ => -1
   }
+}
+
+///|
+/// 扇出明细：与路由卡同口径（成员按 URN 去重），同时暴露原始计数便于核对。
+/// Fan-out detail: URN-deduplicated like the routing card, plus raw counts.
+#export_name("aip_fanout_detail")
+pub fn aip_fanout_detail(json : String, members_csv : String) -> String {
+  let parsed = @json.parse(json) catch {
+    _ => return error_json("invalid JSON")
+  }
+  let env = @aip.AipEnvelope::from_json(parsed) catch {
+    _ => return error_json("invalid AIP envelope")
+  }
+  let members = split_csv(members_csv)
+  if members.length() == 0 {
+    return error_json(
+      "no members to fan out (empty group rejected, same as routing card)",
+    )
+  }
+  let unique = dedup(members[:])
+  let envelopes = @aip.fanout(env, unique[:])
+  let j : @json.Json = {
+    "ok": @json.Json(true),
+    "fanout_count": @json.Json::number(envelopes.length().to_double()),
+    "raw_count": @json.Json::number(members.length().to_double()),
+    "duplicates_dropped": @json.Json::number(
+      (members.length() - unique.length()).to_double(),
+    ),
+    "members": json_strings(unique),
+  }
+  j.stringify()
 }
 
 ///|
@@ -127,6 +229,14 @@ pub fn aip_envelope_meta(json : String) -> String {
   }
   let env = @aip.AipEnvelope::from_json(parsed) catch {
     _ => return error_json("invalid AIP envelope")
+  }
+  if !is_valid_urn(env.sender_urn) ||
+    !is_valid_urn(env.recipient_urn) ||
+    env.seq <= 0L ||
+    env.timestamp < 0L {
+    return error_json(
+      "invalid AIP envelope (value semantics: urn format, seq > 0, timestamp >= 0)",
+    )
   }
   let j : @json.Json = {
     "ok": @json.Json(true),
@@ -161,8 +271,18 @@ pub fn aip_protocol_flow(
   if node_urn.trim(chars=" ").length() == 0 {
     return error_json("node URN required")
   }
+  if !is_valid_urn(node_urn) {
+    return error_json(
+      "node URN invalid (expect urn:... , <=256 chars, [A-Za-z0-9._:-])",
+    )
+  }
   if peer_urns.length() == 0 {
     return error_json("at least one peer URN required")
+  }
+  for urn in peer_urns {
+    if !is_valid_urn(urn) {
+      return error_json("peer URN invalid: \{urn}")
+    }
   }
   let me = @discovery.AgentNode::from_frontmatter(
     node_urn,
@@ -350,6 +470,15 @@ pub fn tool_descriptor_check(
   binding_kind : String,
   mcp_server : String,
 ) -> String {
+  if !is_valid_tool_name(name) {
+    return error_json("tool name must match [A-Za-z0-9_-]{1,64}")
+  }
+  if description.trim(chars=" ").length() == 0 {
+    return error_json("tool description required")
+  }
+  if description.length() > 1024 {
+    return error_json("tool description exceeds 1024 chars")
+  }
   let schema = @json.parse(schema_json) catch {
     _ => return error_json("invalid schema JSON")
   }

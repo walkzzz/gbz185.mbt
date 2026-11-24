@@ -3,7 +3,7 @@
 <p align="left">
   <a href="https://github.com/walkzzz/gbz185.mbt/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/walkzzz/gbz185.mbt/actions/workflows/ci.yml/badge.svg"></a>
   <a href="https://github.com/walkzzz/gbz185.mbt/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
-  <a href="https://mooncakes.io/docs/walkzzz/gbz185.mbt"><img alt="mooncakes" src="https://img.shields.io/badge/mooncakes-0.2.1-blueviolet"></a>
+  <a href="https://mooncakes.io/docs/walkzzz/gbz185.mbt"><img alt="mooncakes" src="https://img.shields.io/badge/mooncakes-0.2.2-blueviolet"></a>
   <img alt="MoonBit" src="https://img.shields.io/badge/MoonBit-%E6%9C%88%E5%85%94-purple">
   <img alt="Tests" src="https://img.shields.io/badge/tests-124%20native%20%C2%B7%20117%C3%973-brightgreen">
   <img alt="Prove" src="https://img.shields.io/badge/moon%20prove-20%20obligations%20proved-blue">
@@ -108,7 +108,7 @@ let env = @aip.AipProtocol::dispatch(
 | 覆盖率 | **811/883 = 91.8%**（native 插桩点口径，2026-11-24；排除 transport_async/playground/examples） |
 | 变异测试 | **19/19 KILLED**（击杀率 100%） |
 | 基准实测 | dispatch 122.98ns / registry_lookup 81.13ns / envelope_roundtrip 1.56µs / find_by_capability 101.59µs（1000 节点 × 8 需求，2026-11-24） |
-| 页面门禁 | `node scripts/check_pages.mjs` **141 项 PASS**（结构 / 移动端导航 / 钩子 / 11 导出 / 语义） |
+| 页面门禁 | `node scripts/check_pages.mjs` **159 项 PASS**（结构 / 移动端导航 / 钩子 / 12 导出 / URN·MCP 校验语义） |
 | 统一错误契约 | `ProtocolError` 特征（part/code/message），全栈 suberror 分型 |
 
 ## 能力与边界
@@ -259,7 +259,7 @@ let env = @aip.AipProtocol::dispatch(
 | Coverage | **811/883 = 91.8%** (native instrumentation-point basis, 2026-11-24; transport_async/playground/examples excluded) |
 | Mutation testing | **19/19 KILLED** (100% kill rate) |
 | Benchmarks | dispatch 122.98ns / registry_lookup 81.13ns / envelope_roundtrip 1.56µs / find_by_capability 101.59µs (1000 nodes × 8 needs, 2026-11-24) |
-| Pages gate | `node scripts/check_pages.mjs` **141 checks PASS** (structure / mobile nav / hooks / 11 exports / semantics) |
+| Pages gate | `node scripts/check_pages.mjs` **159 checks PASS** (structure / mobile nav / hooks / 12 exports / URN & MCP semantics) |
 | Unified error contract | `ProtocolError` trait (part/code/message), typed suberrors across the stack |
 
 ### Capabilities & Boundaries

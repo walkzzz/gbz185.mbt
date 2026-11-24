@@ -21,7 +21,7 @@
 - `tooling`：`ToolDescriptor` 单源模型、注册表、调用日志、MCP 视图；
 - `wire`：统一错误契约与 JSON helpers；`verify`：证明函数；
 - `transport_async`：TCP NDJSON / TLS 指纹钉扎（native-only）；
-- `playground`：11 个非 raise 演示导出 + `docs/` 静态页面。
+- `playground`：12 个非 raise 演示导出 + `docs/` 静态页面。
 
 ### 2.2 非目标
 
@@ -48,7 +48,7 @@ moon test  --target native            # 124/124
 moon test  --target js                # 117/117（wasm / wasm-gc 同）
 moon bench --target native            # 4 项基准
 moon run scripts/mutation_test.mbtx   # 19/19 KILLED
-node scripts/check_pages.mjs          # 141 项
+node scripts/check_pages.mjs          # 159 项
 bash scripts/local_ci.sh --quick      # 本地 CI（含 prove）
 ```
 

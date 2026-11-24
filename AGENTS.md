@@ -22,7 +22,7 @@ moon test --target js                 # 117/117；wasm / wasm-gc 同（transport
 moon fmt                              # 格式化
 moon info                             # 更新 .mbti 契约（git 入库，diff 必查）
 moon bench --target native            # 4 项基准（dispatch / lookup / wire / 能力检索）
-node scripts/check_pages.mjs          # 展示页自检（结构 / 移动端导航 / 钩子 / 11 导出 / AIP 语义，141 项）
+node scripts/check_pages.mjs          # 展示页自检（结构 / 移动端导航 / 钩子 / 12 导出 / AIP·URN·MCP 语义，159 项）
 ```
 
 覆盖率（Windows 下 `moon coverage report` 对 `transport-async` 连字符包名有路径拼接缺陷，故显式传核心 trace）：
