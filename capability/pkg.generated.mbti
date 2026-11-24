@@ -19,10 +19,13 @@ pub(all) struct AgentCapabilitySet {
   default_output_types : Array[String]
   constraints : Array[String]
 }
+pub fn AgentCapabilitySet::count(Self) -> Int32
 pub fn AgentCapabilitySet::covers(Self, ArrayView[String]) -> Bool
+pub fn AgentCapabilitySet::covers_any(Self, ArrayView[String]) -> Bool
 pub fn AgentCapabilitySet::empty() -> Self
 pub fn AgentCapabilitySet::equal(Self, Self) -> Bool
 pub fn AgentCapabilitySet::from_json(@json.Json) -> Self raise @wire.JsonWireError
+pub fn AgentCapabilitySet::missing(Self, ArrayView[String]) -> Array[String]
 pub fn AgentCapabilitySet::not_equal(Self, Self) -> Bool
 pub fn AgentCapabilitySet::to_json(Self) -> @json.Json
 pub fn AgentCapabilitySet::to_repr(Self) -> @debug.Repr

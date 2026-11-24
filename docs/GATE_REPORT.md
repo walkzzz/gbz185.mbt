@@ -1,76 +1,73 @@
-# 上游库质量门禁报告
+# 上游库质量门禁报告（0.2.0 复评）
 
-- 评审对象：walkzzz/gbz185.mbt @ 0.1.0（GB/Z 185.1-185.7 协议栈全栈，10 包，2026-11-17 准入评审；**2026-11-18 生产级复评**）
+- 评审对象：walkzzz/gbz185.mbt @ **0.2.0**（GB/Z 185.1-185.7 协议栈全栈，10 包；复评 2026-11-24）
 - 门禁结论：**PASS（优秀 ≥85）—— 生产级别达成**
 - 一票否决：**0/7 命中**
-- 评分：**94/100**（复评，初评 86）
-  - 契约稳定 14/20 | 单一职责 12/12 | 测试覆盖 12/12 | 依赖可控 10/10
-  - 错误处理 10/10 | 文档完整 10/10 | 维护性 9/10 | 性能资源 8/8 | 低侵入扩展 8/8
-- 定级：**优秀（≥85）—— 生产级别达成，可作为团队核心公共依赖，全范围推广**
-- 阻断项：无
-- 整改项：**4 项全部关闭**（详见 §3 复评注记）
-- 依据：一票否决 V1-V7 / 11 维度判定要点（upstream-library-quality-gate）
+- 评分：**95/100**（0.1.0 初评 86 → 复评 94 → 0.2.0 复评 95）
+- 定级：**优秀（≥85）**，可作为团队核心公共依赖
+- 依据：一票否决 V1-V7 / 9 维权重判定（upstream-library-quality-gate）
 
-## 1. Step 1 一票否决筛查（V1-V7）
+## 1. 一票否决筛查（V1-V7）
 
 | # | 检查项 | 结果 | 证据 |
 | --- | --- | --- | --- |
-| V1 | 小版本破坏性变更 | **否** | 0.1.0 首版；`.mbti` 契约门禁已建（moon info 全包生成），SemVer 0.x 声明 |
-| V2 | 静默吞异常 | **否** | 全栈类型化错误（`JsonWireError`/`AipError`/`RegistryError` 分型 suberror + `ProtocolError` 统一契约），无裸 abort、无吞错 |
-| V3 | 已知高危漏洞 | **否** | 核心零 mooncakes 依赖（仅 MoonBit core）；无网络/文件面（sans-I/O） |
-| V4 | 强侵入全局环境 | **否** | 纯函数库：无全局可变状态、无进程/环境修改、sans-I/O 设计 |
-| V5 | 无任何测试保障 | **否** | 77/77 全绿（native；黑盒/白盒/Fake/quickcheck 属性/小模型 mock 消费）；变异测试 12/12 KILLED |
-| V6 | 无任何可用文档 | **否** | README 中英双语（默认中文）、全包 `.mbti` 契约、源码注释中英双语（17 文件头 + 26 API doc）、公开 API 全覆盖 |
-| V7 | 长期无人维护 | **否** | walkzzz 活跃维护（2026-11-17 建仓+全栈实现+门禁），维护者与周期见工程文档 Charter |
+| V1 | 小版本破坏性变更 | **否** | 0.1.0 → 0.2.0 仅新增 11 项 API + 等价优化；无删除/改名；`.mbti` 入库 + CI 漂移检查；[migration.md](migration.md) 给出升级/回滚路径 |
+| V2 | 静默吞异常 | **否** | 全栈类型化 suberror + `ProtocolError` 统一契约；无裸 abort、无吞错 |
+| V3 | 已知高危漏洞 | **否** | 核心零 mooncakes 依赖；无网络/文件面（sans-I/O） |
+| V4 | 强侵入全局环境 | **否** | 纯函数库；无全局可变状态；sans-I/O |
+| V5 | 无任何测试保障 | **否** | 124/124（native）、117/117 × 3；19/19 变异 KILLED；属性测试 9 例 |
+| V6 | 无任何可用文档 | **否** | 中英双语 README、七篇立项文档、测试/门禁报告、真话台账、`.mbti` 契约 |
+| V7 | 长期无人维护 | **否** | walkzzz 活跃维护（2026-11-17 建仓至 0.2.0），门禁流程完整 |
 
-## 2. Step 2 11 维度评分
+## 2. 九维评分
 
-| 维度 | 权重 | 档位 | 得分 | 判定依据 |
+| 维度 | 权重 | 档位 | 得分 | 依据 |
 | --- | --- | --- | --- | --- |
-| 契约稳定与向后兼容 | 20 | 良 0.7 | **14** | 0.1.0 首版无历史破坏（V1 不适用）；`.mbti` 契约 diff 门禁 + 重叠钉扎（ToolDescriptor/AgentIdentity 单源）已建；**未到"优"**：尚无跨版本演进实证 |
-| 单一职责与边界清晰 | 12 | 优 1.0 | **12** | 一句话可述（GB/Z 185 协议栈 sans-I/O 核心）；按国标分部 10 包、重叠钉扎 7 项（ARCH §2.5）；核心零 mooncakes 依赖、内部高内聚 |
-| 测试覆盖与质量保障 | 12 | 优 1.0 | **12** | 77 用例（黑盒/白盒/Fake/quickcheck 属性/小模型 mock 消费，seed 固定）；变异测试 12/12 KILLED；覆盖率 94.8%；边界/非法输入/防重放/生命周期全覆盖 |
-| 依赖可控性 | 10 | 优 1.0 | **10** | 核心包零 mooncakes 依赖（仅 core）；transport_async 隔离为唯一 FX 依赖点（spire 式分层）；mooncakes 依赖 3 个且全部官方/社区主流 |
-| 错误处理与故障隔离 | 10 | 优 1.0 | **10** | `ProtocolError` 特征（part/code/message）全栈统一；suberror 分型按国标部分号；wire 层/语义层错误分层；边界输入有校验反馈（AIC/信封/字段级）；无静默吞 |
-| 文档完整性与易用性 | 10 | 优 1.0 | **10** | README 中英双语（默认中文）+ 安装/快速开始/适用不适用场景；`.mbti` 公开 API 全说明；源码注释中英双语 43 处；**已补齐**：examples/echo_demo 可运行示例、README FAQ 五问、aip.mbt.md doctest、CHANGELOG |
-| 维护性与生命周期 | 10 | 优 0.9 | **9** | 单人活跃维护 + 工程文档门禁流程（Charter/DEV/roadmap）；**已补齐**：CONTRIBUTING/SECURITY（披露渠道/响应目标表）/CHANGELOG/CI 四件套；**未到满分**：单人项目响应时效依赖个人 |
-| 性能与资源占用 | 8 | 优 1.0 | **8** | sans-I/O 无泄漏面；O(log n)/O(n) 算法显式声明；**已实测**：dispatch 90.51ns / registry_lookup 96.29ns / envelope_roundtrip 1.69µs（moon bench，TEST_REPORT §4） |
-| 低侵入与可扩展性 | 8 | 优 1.0 | **8** | 无全局污染（纯库）；三个标准扩展点（`CAIVerifier`/`ToolCallable`/Transport trait，均 `pub(open)`）；核心参数默认值合理；扩展不影响主流程 |
-| **合计** | | | **94/100**（初评 86 → 复评 94） | |
+| 契约稳定与向后兼容 | 20 | 良 0.8 | **16** | 0.2.0 纯增量 + 升级/回滚指南 + migration 对齐检查表；扣分：仍无跨大版本并存升级实证 |
+| 单一职责与边界清晰 | 12 | 优 1.0 | **12** | 十包按国标分部；依赖单向；sans-I/O 核心与传输扩展分离 |
+| 测试覆盖与质量保障 | 12 | 优 1.0 | **12** | 124 用例 + 9 属性；覆盖 91.8%（插桩点，口径可复算）；19/19 变异；边界/非法/防重放/生命周期全覆盖 |
+| 依赖可控性 | 10 | 优 1.0 | **10** | 核心零 mooncakes 依赖；扩展仅 async/mooncry 且版本钉扎 |
+| 错误处理与故障隔离 | 10 | 优 1.0 | **10** | `ProtocolError` 全栈；错误码稳定；边界输入有字段级反馈 |
+| 文档完整性与易用性 | 10 | 优 1.0 | **10** | README + 安装/快速开始/FAQ；七篇立项文档；页面演示与门禁说明 |
+| 维护性与生命周期 | 10 | 优 0.9 | **9** | CONTRIBUTING/SECURITY/CHANGELOG/roadmap + 本地 CI；扣分：单人维护 |
+| 性能与资源占用 | 8 | 优 1.0 | **8** | 纳秒级 dispatch/lookup、微秒级 wire；能力检索等价剪枝；4 项基准可复现 |
+| 低侵入与可扩展性 | 8 | 优 1.0 | **8** | 三个 `pub(open)` 扩展点；无全局污染；核心默认值合理 |
+| **合计** | | | **95/100** | |
 
-## 3. Step 3 定级与判定
+## 3. 0.2.0 增量复核
 
-**优秀（≥85）→ PASS（生产级别达成，2026-11-18 复评 94/100）**。4 项整改全部关闭：
+| 项 | 状态 | 证据 |
+| --- | --- | --- |
+| 新增 11 项 API | ✅ | `identity/capability/discovery/registry/aip/tooling` 均有黑盒断言与变异守护 |
+| 能力检索剪枝 | ✅ | 语义等价证明（长度必须 ≥ 去重需求数）+ 等长/超集/短集三类测试 |
+| 变异矩阵 12 → 19 | ✅ | 19/19 KILLED；失效的旧变异已改写（M01/M02/M10） |
+| 覆盖率口径统一 | ✅ | 91.8%（811/883）；废弃不可复现的 94.8% |
+| 页面门禁 18 → 131 | ✅ | 结构 / 旧钩子保留 / 新钩子 / 11 导出 / 语义 |
+| 排序语义声明 | ✅ | 明确 MoonBit `Compare` 为 shortlex（GAP-5） |
 
-| # | 整改项 | 期限 | 对应维度 |
-| --- | --- | --- | --- |
-| 1 | ~~补 `examples/` 最小可运行示例 + FAQ/踩坑指南~~ **✅ 已关闭（2026-11-18）**：examples/echo_demo（moon run 可执行）+ README FAQ 五问（双语） | ✅ 完成 | 文档完整 7→优 |
-| 2 | ~~补 `CHANGELOG.md` / `CONTRIBUTING.md` / `SECURITY.md`~~ **✅ 已关闭（2026-11-18）**：三文件已补（Keep a Changelog 格式/贡献流程/安全披露与响应目标表） | ✅ 完成 | 维护性 7→优 |
-| 3 | ~~`moon bench` 基准实测~~ **✅ 已关闭（2026-11-17）**：dispatch 90.51ns / registry_lookup 96.29ns / envelope_roundtrip 1.69µs（moon bench 实测回填 TEST_REPORT §4） | ✅ 完成 | 性能资源 5.6→优 |
-| 4 | ~~`moon prove` 运行 verify 包证明义务~~ **✅ 已关闭（2026-11-18 复验）**：WSL Ubuntu 内 moon prove + Z3 4.8.12——**3 goals proved**（clamp_i64 + next_seq 严格递增 + inbox_advance 防重放裁决）；next_seq/inbox_advance 均已接入 aip 包 dispatch/receive 真实调用。**185.3 ATR 与 185.7 工具调用深度实现完成（生产级）**：凭证生命周期/容量防护/事件审计/能力检索（registry）+ ToolRegistry/调用日志/MCP 单源映射/描述校验（tooling）——单一职责与测试维度进一步强化 | ✅ 完成 | 契约稳定（加分项） |
-
-## 4. 发布前流水线状态（mooncakes 发布场景附加）
+## 4. 发布前流水线
 
 | 步骤 | 状态 |
 | --- | --- |
-| 1. 全量自动化测试 | ✅ 77/77（四目标） |
-| 2. 代码质量门禁 | ✅ 本报告 PASS |
-| 3. 产物构建与校验（发布包纯净） | ⬜ 待 `moon publish --dry-run` 验证 |
-| 4. 版本号与变更日志 | ✅ CHANGELOG.md 已补（Keep a Changelog 格式） |
-| 5. 版本标签 | ⬜ 待打 v0.1.0 |
+| 1. 全量自动化测试 | ✅ 124/124（native）；117/117 × 3 |
+| 2. 代码质量门禁 | ✅ 本报告 PASS（95/100） |
+| 3. 产物构建与校验 | ⬜ 待 `moon publish --dry-run`（由维护者执行） |
+| 4. 版本号与变更日志 | ✅ `0.2.0` + CHANGELOG |
+| 5. 版本标签 | ⬜ 待打 `v0.2.0` |
 | 6. 正式发布 | ⬜ **由 walkzzz 亲自执行**（既定约定） |
 | 7. 版本文档更新 | ⬜ 发布后同步 mooncakes.io/docs |
 
-## 5. 测试手段清单（多手段已落地）
+## 5. 测试手段清单
 
 | 手段 | 落点 | 状态 |
 | --- | --- | --- |
 | 黑盒契约 | 各包 `*_test.mbt` | ✅ |
-| 白盒边界 | `aip/aip_wbtest.mbt` 等 | ✅ |
+| 白盒边界 | `aip/aip_wbtest.mbt`、`arch_wbtest.mbt` | ✅ |
 | Fake/Mock | `aip/fake.mbt`（sans-I/O 直连） | ✅ |
-| 属性测试 | `aip/aip_prop_test.mbt`（quickcheck，seed 2026-2030） | ✅ |
+| 属性测试 | `aip/aip_prop_test.mbt`、`aip/aip_extra_prop_test.mbt`（quickcheck，seed 2026-2034） | ✅ |
 | 可执行不变量 | `AipProtocol::invariant` | ✅ |
-| 形式化验证 | `verify/` proof_enabled（SMT 待装） | 🔶 义务已生成 |
-| 变异测试 | 主仓 `scripts/mutation_test.mbtx`（10/10 KILLED） | ✅ |
-| 覆盖率/CRAP | 主仓 `docs/TEST_REPORT.md`（93.1% / <10） | ✅ |
-| 本地 LLM 夹具 | `test-fixtures/llm-local.md` 登记 | ✅ |
+| 形式化验证 | `verify/` proof_enabled（20 obligations / 13 functions） | ✅ |
+| 变异测试 | `scripts/mutation_test.mbtx`（19/19 KILLED） | ✅ |
+| 覆盖率 | `moon coverage report`（811/883 = 91.8%） | ✅ |
+| 页面门禁 | `scripts/check_pages.mjs`（131 项） | ✅ |
+| 浏览器验收 | CDP E2E（本地/线上） | ✅（见 TEST_REPORT §6） |

@@ -2,13 +2,27 @@
 package "walkzzz/gbz185.mbt/playground"
 
 // Values
+pub fn aip_envelope_meta(String) -> String
+
 pub fn aip_fanout_count(String, String) -> Int32
 
 pub fn aip_make_envelope(String, String, Int32, Int32, String, String) -> String
 
 pub fn aip_next_seq(Int32) -> Int32
 
+pub fn aip_protocol_flow(String, String, String, String) -> String
+
 pub fn aip_validate(String) -> Bool
+
+pub fn capability_report(String, String) -> String
+
+pub fn discovery_match(String, String, Bool) -> String
+
+pub fn identity_aic_check(String) -> String
+
+pub fn route_resolve(String, String, String) -> String
+
+pub fn tool_descriptor_check(String, String, String, String, String) -> String
 
 // Errors
 

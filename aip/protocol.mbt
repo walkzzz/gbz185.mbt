@@ -45,6 +45,46 @@ pub fn AipProtocol::peer(
 }
 
 ///|
+/// 已发现对端 URN 清单（shortlex 确定性顺序：MoonBit String Compare 先长度后逐字符；
+/// 本栈 URN 等长时即为字典序）
+/// Discovered peer URN list (shortlex deterministic order; equal-length stack URNs are lexicographic).
+pub fn AipProtocol::peer_urns(self : AipProtocol) -> Array[String] {
+  let out : Array[String] = []
+  for urn, _node in self.peers {
+    out.push(urn)
+  }
+  out.sort()
+  out
+}
+
+///|
+/// 本端是否已注册（身份 Active）——dispatch 的前置条件
+/// Whether this endpoint is registered (identity Active) — the precondition of dispatch.
+pub fn AipProtocol::is_registered(self : AipProtocol) -> Bool {
+  self.self_node.identity.identity_status.is_active()
+}
+
+///|
+/// 当前发送序号（最近一次 dispatch 分配；未发送为 0）
+/// Current outbox sequence (last assigned by dispatch; 0 before the first send).
+pub fn AipProtocol::outbox_seq(self : AipProtocol) -> Int64 {
+  self.outbox_seq
+}
+
+///|
+/// 某发送者的防重放水位（未收到过其信封为 0）
+/// Replay watermark for a sender (0 if no envelope has been received from it).
+pub fn AipProtocol::inbox_watermark(
+  self : AipProtocol,
+  sender_urn : String,
+) -> Int64 {
+  match self.inbox_seq.get(sender_urn) {
+    Some(s) => s
+    None => 0L
+  }
+}
+
+///|
 pub fn AipProtocol::invariant(self : AipProtocol) -> Bool {
   self.outbox_seq >= 0L &&
   self.self_node.urn.has_prefix(@wire.agent_urn_prefix())
@@ -161,7 +201,7 @@ pub fn AipProtocol::dispatch(
   recipient_urn : String,
   payload : Json,
 ) -> AipEnvelope raise AipError {
-  guard self.self_node.identity.identity_status is @identity.Active else {
+  guard self.is_registered() else {
     raise Registry("dispatch requires active identity (register first)")
   }
   let is_group = recipient_urn.has_prefix(@wire.group_urn_prefix())
@@ -208,7 +248,7 @@ pub fn AipProtocol::receive(
   }
   self.inbox_seq[env.sender_urn] = env.seq
   {
-    message_id: "\{env.sender_urn}#\{env.seq}",
+    message_id: env.message_id(),
     kind: env.kind,
     sender_urn: env.sender_urn,
     seq: env.seq,

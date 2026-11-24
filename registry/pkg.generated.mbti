@@ -55,6 +55,7 @@ pub fn TokenRegistry::clear_events(Self) -> Unit
 pub fn TokenRegistry::count(Self) -> Int32
 pub fn TokenRegistry::events(Self) -> Array[RegistryEvent]
 pub fn TokenRegistry::find_by_capability(Self, ArrayView[String]) -> Array[@discovery.AgentNode]
+pub fn TokenRegistry::is_registered(Self, String) -> Bool
 pub fn TokenRegistry::last_seen_of(Self, String) -> Int64?
 pub fn TokenRegistry::list_active(Self) -> Array[@discovery.AgentNode]
 pub fn TokenRegistry::lock(Self, String) -> Unit raise RegistryError
@@ -67,6 +68,7 @@ pub fn TokenRegistry::renew(Self, String, &CAIVerifier, now? : Int64, validity? 
 pub fn TokenRegistry::revoke(Self, String) -> Unit raise RegistryError
 pub fn TokenRegistry::state(Self, String) -> @identity.IdentityStatus?
 pub fn TokenRegistry::unregister(Self, String) -> Unit raise RegistryError
+pub fn TokenRegistry::urn_list(Self) -> Array[String]
 
 // Type aliases
 

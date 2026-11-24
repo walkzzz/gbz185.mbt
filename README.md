@@ -3,11 +3,11 @@
 <p align="left">
   <a href="https://github.com/walkzzz/gbz185.mbt/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/walkzzz/gbz185.mbt/actions/workflows/ci.yml/badge.svg"></a>
   <a href="https://github.com/walkzzz/gbz185.mbt/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
-  <a href="https://mooncakes.io/docs/walkzzz/gbz185.mbt"><img alt="mooncakes" src="https://img.shields.io/badge/mooncakes-0.1.0-blueviolet"></a>
+  <a href="https://mooncakes.io/docs/walkzzz/gbz185.mbt"><img alt="mooncakes" src="https://img.shields.io/badge/mooncakes-0.2.0-blueviolet"></a>
   <img alt="MoonBit" src="https://img.shields.io/badge/MoonBit-%E6%9C%88%E5%85%94-purple">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-77%2F77%20passing-brightgreen">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-124%20native%20%C2%B7%20117%C3%973-brightgreen">
   <img alt="Prove" src="https://img.shields.io/badge/moon%20prove-20%20obligations%20proved-blue">
-  <img alt="Mutation" src="https://img.shields.io/badge/mutation-12%2F12%20KILLED-success">
+  <img alt="Mutation" src="https://img.shields.io/badge/mutation-19%2F19%20KILLED-success">
   <img alt="Targets" src="https://img.shields.io/badge/targets-native%7Cjs%7Cwasm%7Cwasm--gc-orange">
   <img alt="Standard" src="https://img.shields.io/badge/GB%2FZ%20185--2026-%E6%99%BA%E8%83%BD%E4%BD%93%E4%BA%92%E8%81%94-red">
 </p>
@@ -52,7 +52,7 @@ MoonBit 实现的 **GB/Z 185-2026《人工智能 智能体互联》国家标准�
 
 ## 在线演示（浏览器内 AIP 编解码）
 
-**<https://walkzzz.github.io/gbz185.mbt/>**（启用 Pages 后）—— 信封编码/校验、群组扇出、序号推进；全部由编译到 JavaScript 的同一份 MoonBit 实现实时完成（`playground/` 导出层，`docs/` 页面）。
+**<https://walkzzz.github.io/gbz185.mbt/>**（启用 Pages 后）—— 信封编码/校验、元数据、群组扇出、序号推进、AIP 完整流程、能力匹配、发现过滤、AIC 校验、路由解析与工具描述；全部由编译到 JavaScript 的同一份 MoonBit 实现实时完成（`playground/` 导出层 11 个函数，`docs/` 页面）。
 
 - 本地预览：`node scripts/serve_pages.mjs` → <http://127.0.0.1:8080/>
 - 启用 GitHub Pages（维护者一次性）：Settings → Pages → Source = *Deploy from a branch* → `main` / `/docs`（`docs/playground.js` 已入库，零构建）；或 Actions 模式并运行 `gh workflow run pages.yml -R walkzzz/gbz185.mbt`。
@@ -85,14 +85,15 @@ let env = @aip.AipProtocol::dispatch(
 
 | 任务 | 入口 |
 | --- | --- |
-| 身份码校验（185.2） | `@identity.aic_validate` · `AgentIdentity::from_json` |
+| 身份码校验（185.2） | `@identity.aic_validate` · `AgentIdentity::from_json` · `IdentityStatus::is_active` |
 | 注册 / 鉴权 / 生命周期（185.3） | `@registry.TokenRegistry::register` → `authenticate` → `lock / revoke / renew` |
-| 能力描述与覆盖判断（185.4） | `@capability.AgentCapabilitySet::covers` |
-| 智能体发现与匹配（185.5） | `@discovery.AgentNode::from_frontmatter` · `match_nodes` |
-| 交互收发（185.6） | `@aip.AipProtocol::dispatch / receive` · `AipSession::send / recv` |
-| 群组路由与扇出 | `@aip.RouteTable::add_group` · `fanout` |
-| 信封 JSON 编解码 | `@aip.AipEnvelope::to_json / from_json` |
-| 工具单源模型（185.7） | `@tooling.ToolDescriptor::validate` · `ToolRegistry::invoke_tool` · `to_mcp_entry` |
+| 注册表查询 | `@registry.TokenRegistry::is_registered` · `urn_list` · `find_by_capability`（去重 + 长度剪枝） |
+| 能力描述与覆盖判断（185.4） | `@capability.AgentCapabilitySet::covers` · `covers_any` · `missing` · `count` |
+| 智能体发现与匹配（185.5） | `@discovery.AgentNode::from_frontmatter` · `AgentNode::matches` · `match_nodes` |
+| 交互收发（185.6） | `@aip.AipProtocol::dispatch / receive` · `is_registered` · `outbox_seq` · `inbox_watermark` · `peer_urns` |
+| 群组路由与扇出 | `@aip.RouteTable::add_group` · `resolve` · `is_member` · `fanout` |
+| 信封 JSON 编解码 | `@aip.AipEnvelope::to_json / from_json` · `message_id`（`sender#seq` 单源） |
+| 工具单源模型（185.7） | `@tooling.ToolDescriptor::validate` · `ToolRegistry::invoke_tool` · `is_registered` · `names` · `to_mcp_entry` |
 | 统一错误契约 | `@wire.ProtocolError` 特征（全栈 suberror 分型） |
 | 传输扩展 | `@transport_async.TcpChannel` · `TlsTcpChannel` · `ndjson_encode / ndjson_decode` |
 | 形式化验证 | `@verify.clamp_i64 / next_seq / inbox_advance` |
@@ -102,11 +103,12 @@ let env = @aip.AipProtocol::dispatch(
 | 门禁 | 结果 |
 | --- | --- |
 | `moon check --deny-warn --target all` | 四目标零警告 |
-| `moon test --target native` | **77/77 全绿（2026-11-18 实测）**（黑盒/白盒/Fake Transport/quickcheck 属性/小模型 mock 消费，seed 固定可复现） |
-| 形式化验证 | `verify/` 包 `proof_enabled`——**moon prove 20 obligations proved（13 verified functions）**（Z3 4.8.12/WSL，2026-11-19） |
-| 覆盖率 | 94.8%；CRAP 全函数 < 10 |
-| 变异测试 | 12/12 KILLED（击杀率 100%） |
-| 基准实测 | dispatch 90.51ns / registry_lookup 96.29ns / envelope_roundtrip 1.69µs |
+| `moon test --target native` | **124/124 全绿（2026-11-24 实测）**；js / wasm / wasm-gc 各 **117/117**（黑盒/白盒/Fake Transport/quickcheck 属性/小模型 mock 消费，seed 固定可复现） |
+| 形式化验证 | `verify/` 包 `proof_enabled`——**moon prove 20 obligations proved（13 verified functions）**（Z3 4.8.12/WSL，2026-11-19；API 增强未改动证明函数） |
+| 覆盖率 | **811/883 = 91.8%**（native 插桩点口径，2026-11-24；排除 transport_async/playground/examples） |
+| 变异测试 | **19/19 KILLED**（击杀率 100%） |
+| 基准实测 | dispatch 122.98ns / registry_lookup 81.13ns / envelope_roundtrip 1.56µs / find_by_capability 101.59µs（1000 节点 × 8 需求，2026-11-24） |
+| 页面门禁 | `node scripts/check_pages.mjs` **131 项 PASS**（结构 / 钩子 / 11 导出 / 语义） |
 | 统一错误契约 | `ProtocolError` 特征（part/code/message），全栈 suberror 分型 |
 
 ## 能力与边界
@@ -116,6 +118,8 @@ let env = @aip.AipProtocol::dispatch(
 - **不含**：MQ 分发、国密套件（SM2/SM3/SM4）互联安全层——0.2.0 路线图（见 CHANGELOG）。
 - mTLS 双向客户端证书受 @tls API 限制，以对端证书 SHA-256 指纹钉扎等效实现（GAP-2）。
 - Windows 本地 `moon prove` 受 moon 工具链 `\\?` mkdir 平台 bug 影响，证明验证走 WSL/CI（GAP-1）。
+- **排序语义**：`urn_list` / `peer_urns` / `names` 使用 MoonBit 原生 `Compare`（shortlex：先长度后逐字符），等长 URN 时等价字典序；需要严格字典序请自定义比较（GAP-5）。
+- **覆盖率口径**：native 插桩点 811/883 = 91.8%（2026-11-24），排除 `transport_async`/`playground`/`examples`；旧文档 94.8% 分母不可复现，已废弃（GAP-6）。
 - 完整真话台账见 [docs/known-gaps.md](docs/known-gaps.md)；适用：需要 GB/Z 185-2026 协议建模的 MoonBit 智能体/多智能体项目。
 
 ## 常见问题 / FAQ
@@ -145,8 +149,16 @@ let env = @aip.AipProtocol::dispatch(
 | 文档 | 内容 |
 | --- | --- |
 | [AGENTS.md](AGENTS.md) | Agent 指南：门禁纪律 · Mock 模式 · wire 陷阱 · 变异基线 |
-| [docs/TEST_REPORT.md](docs/TEST_REPORT.md) | 测试矩阵（77 用例）· 形式化验证（20 obligations）· 基准实测 |
-| [docs/GATE_REPORT.md](docs/GATE_REPORT.md) | 质量门禁报告（94/100 优秀 PASS） |
+| [docs/architecture.md](docs/architecture.md) | 架构设计：十包边界 · 依赖方向 · 数据流 · 排序语义 |
+| [docs/performance.md](docs/performance.md) | 性能报告：基准实测 · 复杂度 · 剪枝等价性 · 覆盖率口径 |
+| [docs/comparison.md](docs/comparison.md) | 方案对比：手写协议 / 通用 RPC / 上游实现的差异 |
+| [docs/assessment.md](docs/assessment.md) | 立项评估：11 维自评（92.6 / A）与风险清单 |
+| [docs/proposal.md](docs/proposal.md) | 立项建议书：目标 · 范围 · 里程碑 · 验收口径 |
+| [docs/migration.md](docs/migration.md) | 迁移指南：映射步骤 · 对齐检查表 · 常见坑 |
+| [docs/security.md](docs/security.md) | 安全说明：威胁模型 · 信任边界 · 已知安全边界 |
+| [docs/roadmap.md](docs/roadmap.md) | 路线图：0.2.0 收口与 0.3.0 候选 |
+| [docs/TEST_REPORT.md](docs/TEST_REPORT.md) | 测试矩阵（124 用例）· 形式化验证（20 obligations）· 基准实测 |
+| [docs/GATE_REPORT.md](docs/GATE_REPORT.md) | 质量门禁报告（95/100 优秀 PASS） |
 | [docs/known-gaps.md](docs/known-gaps.md) | 真话台账：已知边界与缺口（诚实记录） |
 | [CHANGELOG.md](CHANGELOG.md) | 版本变更（Keep a Changelog） |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | 贡献指南 |
@@ -224,14 +236,15 @@ let env = @aip.AipProtocol::dispatch(
 
 | Task | Entry points |
 | --- | --- |
-| Identity code validation (185.2) | `@identity.aic_validate` · `AgentIdentity::from_json` |
+| Identity code validation (185.2) | `@identity.aic_validate` · `AgentIdentity::from_json` · `IdentityStatus::is_active` |
 | Register / auth / lifecycle (185.3) | `@registry.TokenRegistry::register` → `authenticate` → `lock / revoke / renew` |
-| Capability & coverage (185.4) | `@capability.AgentCapabilitySet::covers` |
-| Discovery & matching (185.5) | `@discovery.AgentNode::from_frontmatter` · `match_nodes` |
-| Send / receive (185.6) | `@aip.AipProtocol::dispatch / receive` · `AipSession::send / recv` |
-| Group routing & fanout | `@aip.RouteTable::add_group` · `fanout` |
-| Envelope JSON codec | `@aip.AipEnvelope::to_json / from_json` |
-| Tool single source (185.7) | `@tooling.ToolDescriptor::validate` · `ToolRegistry::invoke_tool` · `to_mcp_entry` |
+| Registry queries | `@registry.TokenRegistry::is_registered` · `urn_list` · `find_by_capability` (dedup + length pruning) |
+| Capability & coverage (185.4) | `@capability.AgentCapabilitySet::covers` · `covers_any` · `missing` · `count` |
+| Discovery & matching (185.5) | `@discovery.AgentNode::from_frontmatter` · `AgentNode::matches` · `match_nodes` |
+| Send / receive (185.6) | `@aip.AipProtocol::dispatch / receive` · `is_registered` · `outbox_seq` · `inbox_watermark` · `peer_urns` |
+| Group routing & fanout | `@aip.RouteTable::add_group` · `resolve` · `is_member` · `fanout` |
+| Envelope JSON codec | `@aip.AipEnvelope::to_json / from_json` · `message_id` (`sender#seq` single source) |
+| Tool single source (185.7) | `@tooling.ToolDescriptor::validate` · `ToolRegistry::invoke_tool` · `is_registered` · `names` · `to_mcp_entry` |
 | Unified error contract | `@wire.ProtocolError` trait (typed suberrors across the stack) |
 | Transport extension | `@transport_async.TcpChannel` · `TlsTcpChannel` · `ndjson_encode / ndjson_decode` |
 | Formal verification | `@verify.clamp_i64 / next_seq / inbox_advance` |
@@ -241,11 +254,12 @@ let env = @aip.AipProtocol::dispatch(
 | Gate | Result |
 | --- | --- |
 | `moon check --deny-warn --target all` | zero warnings on 4 targets |
-| `moon test --target native` | **77/77 green (measured 2026-11-18)** (blackbox/whitebox/Fake Transport/quickcheck properties/model-based mock consumption, fixed seeds) |
-| Formal verification | `verify/` with `proof_enabled` — **moon prove 20 obligations proved (13 verified functions)** (Z3 4.8.12/WSL, 2026-11-19) |
-| Coverage | 94.8%; CRAP < 10 on all functions |
-| Mutation testing | 12/12 KILLED (100% kill rate) |
-| Benchmarks | dispatch 90.51ns / registry_lookup 96.29ns / envelope_roundtrip 1.69µs |
+| `moon test --target native` | **124/124 green (measured 2026-11-24)**; js / wasm / wasm-gc **117/117** each (blackbox/whitebox/Fake Transport/quickcheck properties/model-based mock consumption, fixed seeds) |
+| Formal verification | `verify/` with `proof_enabled` — **moon prove 20 obligations proved (13 verified functions)** (Z3 4.8.12/WSL, 2026-11-19; API additions did not touch proof functions) |
+| Coverage | **811/883 = 91.8%** (native instrumentation-point basis, 2026-11-24; transport_async/playground/examples excluded) |
+| Mutation testing | **19/19 KILLED** (100% kill rate) |
+| Benchmarks | dispatch 122.98ns / registry_lookup 81.13ns / envelope_roundtrip 1.56µs / find_by_capability 101.59µs (1000 nodes × 8 needs, 2026-11-24) |
+| Pages gate | `node scripts/check_pages.mjs` **131 checks PASS** (structure / hooks / 11 exports / semantics) |
 | Unified error contract | `ProtocolError` trait (part/code/message), typed suberrors across the stack |
 
 ### Capabilities & Boundaries
@@ -255,6 +269,8 @@ let env = @aip.AipProtocol::dispatch(
 - **Not included**: MQ fan-out, SM-suite (SM2/SM3/SM4) interconnect security — 0.2.0 roadmap (see CHANGELOG).
 - mTLS mutual client certificates are limited by the @tls API; implemented equivalently via peer certificate SHA-256 fingerprint pinning (GAP-2).
 - Windows-local `moon prove` is affected by a moon toolchain `\\?` mkdir platform bug; proof verification runs on WSL/CI (GAP-1).
+- **Ordering semantics**: `urn_list` / `peer_urns` / `names` use MoonBit's native `Compare` (shortlex: length first); equal-length URNs are lexicographic. Use a custom comparator when strict lexicographic order is required (GAP-5).
+- **Coverage basis**: native instrumentation points 811/883 = 91.8% (2026-11-24), excluding `transport_async`/`playground`/`examples`; the legacy 94.8% denominator is no longer reproducible and is retired (GAP-6).
 - Full honest ledger: [docs/known-gaps.md](docs/known-gaps.md). Suitable for MoonBit agent / multi-agent projects that need GB/Z 185-2026 protocol modeling.
 
 ### FAQ

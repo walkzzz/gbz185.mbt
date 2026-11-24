@@ -78,7 +78,9 @@ pub fn ToolRegistry::descriptors(Self) -> Array[ToolDescriptor]
 pub fn ToolRegistry::invocation_log(Self) -> Array[(ToolInvocation, ToolOutcome)]
 pub fn ToolRegistry::invoke_batch(Self, ArrayView[ToolInvocation]) -> Array[ToolOutcome]
 pub fn ToolRegistry::invoke_tool(Self, ToolInvocation) -> ToolOutcome raise ToolingError
+pub fn ToolRegistry::is_registered(Self, String) -> Bool
 pub fn ToolRegistry::lookup(Self, String) -> ToolDescriptor?
+pub fn ToolRegistry::names(Self) -> Array[String]
 pub fn ToolRegistry::new(max_tools? : Int32) -> Self
 pub fn ToolRegistry::register(Self, ToolDescriptor, (ToolInvocation) -> ToolOutcome) -> Unit raise ToolingError
 pub fn ToolRegistry::unregister(Self, String) -> Unit raise ToolingError

@@ -234,14 +234,54 @@ pub fn TokenRegistry::list_active(
 }
 
 ///|
-/// 按能力检索（GB/Z 185.4 ACS 匹配联动；仅 Active 智能体）
+/// 是否已注册（生命周期查询不改变状态）
+pub fn TokenRegistry::is_registered(self : TokenRegistry, urn : String) -> Bool {
+  self.entries.get(urn) is Some(_)
+}
+
+///|
+/// 已注册 URN 清单（shortlex 确定性顺序——MoonBit String Compare 先长度后逐字符；
+/// 本栈 URN 等长时即为字典序，便于诊断/展示）
+/// Registered URN list (shortlex deterministic order; equal-length stack URNs are lexicographic).
+pub fn TokenRegistry::urn_list(self : TokenRegistry) -> Array[String] {
+  let out : Array[String] = []
+  for urn, _e in self.entries {
+    out.push(urn)
+  }
+  out.sort()
+  out
+}
+
+///|
+/// 能力需求去重（保持首次出现顺序）：长度剪枝的前提
+fn dedup_caps(caps : ArrayView[String]) -> Array[String] {
+  let out : Array[String] = []
+  for cap in caps {
+    if !out.contains(cap) {
+      out.push(cap)
+    }
+  }
+  out
+}
+
+///|
+/// 按能力检索（GB/Z 185.4 ACS 匹配联动；仅 Active 智能体）。
+/// 先去重需求（重复项不改变覆盖语义），再用「能力条目数 < 需求数」剪枝——
+/// 覆盖 k 个互异需求至少需要 k 个能力条目，剪枝严格等价于原线性扫描。
+/// Capability search (GB/Z 185.4 ACS matching; Active agents only). Requires are deduplicated
+/// (duplicates never change coverage semantics), then entries are pruned when their capability
+/// count is below the requirement count — covering k distinct requirements needs at least k entries.
 pub fn TokenRegistry::find_by_capability(
   self : TokenRegistry,
   caps : ArrayView[String],
 ) -> Array[@discovery.AgentNode] {
+  let required = dedup_caps(caps)
+  let need = required.length()
   let out : Array[@discovery.AgentNode] = []
   for _urn, e in self.entries {
-    if e.state is @identity.Active && e.node.acs.covers(caps) {
+    if e.state is @identity.Active &&
+      e.node.acs.capabilities.length() >= need &&
+      e.node.acs.covers(required[:]) {
       out.push(e.node)
     }
   }

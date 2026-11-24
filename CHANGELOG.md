@@ -2,7 +2,48 @@
 
 本项目的所有显著变更记录于此文件。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [语义化版本 2.0.0](https://semver.org/spec/v2.0.0.html)。
 
-## [0.1.0] - 未发布（准发布：CDN 恢复后 mooncakes 上架）
+## [0.2.0] - 2026-11-24
+
+### Added — API 扩充（纯增量，无破坏）
+
+- `identity`：`IdentityStatus::is_active`、`AgentIdentity::is_active`（仅 Active 可用）
+- `capability`：`AgentCapabilitySet::count` / `covers_any` / `missing`（缺失诊断，保持顺序并去重）
+- `discovery`：`AgentNode::matches`（发现过滤原子判定）；`match_nodes` 复用同一判定
+- `registry`：`TokenRegistry::is_registered` / `urn_list`（shortlex 确定性顺序）
+- `aip`：`AipProtocol::is_registered` / `outbox_seq` / `inbox_watermark` / `peer_urns`；
+  `AipEnvelope::message_id`（`sender#seq` 单源，接收侧复用）；
+  `AipSession::session_id` / `local_urn` / `remote_urn` / `outbox_seq`；`RouteTable::is_member`
+- `tooling`：`ToolRegistry::is_registered` / `names`（shortlex 确定性顺序）
+
+### Changed
+
+- `TokenRegistry::find_by_capability`：需求先去重 + 「能力条目数 < 需求数」长度剪枝（严格等价的性能优化，含等长/超集/短集测试）
+- `AipProtocol::dispatch` 的身份门槛改用 `is_registered()`；`receive` 的消息标识改用 `envelope.message_id()`（单源）
+- `tooling` 注销检查复用 `is_registered()`
+
+### Added — 演示与页面
+
+- `playground` 导出 4 → **11**：新增 `aip_envelope_meta`、`aip_protocol_flow`、`capability_report`、`discovery_match`、`identity_aic_check`、`route_resolve`、`tool_descriptor_check`
+- `docs/index.html` / `app.js` / `style.css` 改为库首页范式（sticky 导航、Hero 实时流程、12 能力卡、10 演示卡、深浅主题、Open Graph、响应式），**保留既有 `id` 与 `data-*` 钩子**
+- `scripts/check_pages.mjs` 18 → **131 项**（结构 / 旧钩子 / 新钩子 / 11 导出 / AIP 语义 / 版本口径）
+
+### Added — 文档
+
+- 七篇立项文档：`docs/architecture.md`、`performance.md`、`comparison.md`、`assessment.md`、`proposal.md`、`migration.md`、`security.md`；新增 `docs/roadmap.md`
+
+### Quality（2026-11-24 实测）
+
+- 测试：**native 124/124**；**js / wasm / wasm-gc 各 117/117**
+- 覆盖率：**811/883 = 91.8%**（native 插桩点口径，排除 transport_async/playground/examples；旧 94.8% 分母不可复现，废弃）
+- 变异：**19/19 KILLED**（12 → 19；修正 M01/M02/M10 失效的 old_sub）
+- 基准：dispatch 122.98ns / registry_lookup 81.13ns / envelope 往返 1.56µs / find_by_capability 101.59µs（1000 节点 × 8 需求）
+- 形式化：20 obligations / 13 verified functions（未改动证明函数）
+
+### Fixed
+
+- 明确并测试排序语义：MoonBit `Compare for String` 为 **shortlex**（长度优先），`names` 断言可区分「已排序」与「插入顺序」
+
+## [0.1.0] - 2026-11-20
 
 ### Added — GB/Z 185-2026 协议栈（10 包）
 
@@ -27,19 +68,21 @@
 - 中英双语 README（默认中文）+ 中英双语源码注释（17 文件头 + 26 API doc）
 - mooncakes `moon publish` 与 GitHub Actions Release 工作流（workflow_dispatch 手动触发）
 
-### Quality
+### Quality（0.1.0 历史口径，已被 0.2.0 取代）
 
 - 77/77 测试全绿（native；黑盒/白盒/Fake/quickcheck 属性 seed 固定/小模型 mock 消费）
 - 四目标 `moon check --deny-warn --target all` 零警告
-- 覆盖率 94.8%（78/1503 未覆盖，集中于防御分支）；CRAP 全函数 < 10
-- 变异测试 12/12 KILLED（击杀率 100%）
+- 覆盖率 94.8%（78/1503 未覆盖，集中于防御分支；该分母不可复现，0.2.0 起改用插桩点口径）
+- 变异测试 12/12 KILLED（0.2.0 扩至 19/19）
 - 基准实测（moon bench）：dispatch 90.51ns、registry_lookup 96.29ns、envelope_wire_roundtrip 1.69µs
-- 形式化验证：3 goals proved（WSL Ubuntu + Z3 4.8.12）
+- 形式化验证：3 goals proved（WSL Ubuntu + Z3 4.8.12；0.2.0 保持 20 obligations）
 
 ## [Unreleased]
 
-### Planned — 0.2.0
+### Planned — 0.3.0
 
-- transport-async：mTLS 双向客户端证书（@tls API 支持后）、MQ 分发（moonamqp1）、ACPs 注册/发现客户端
-- AIP 会话超时与心跳重连（结构化并发）
-- 国密通道（mooncry SM2/SM3/SM4）与后量子证书实验（mooncred ML-DSA）
+- 互联模式 MQ 分发（185.6）设计评审与实现
+- 国密套件（SM2/SM3/SM4）与 mooncry 集成评估
+- `transport_async` async API 的 `.mbti` 导出（跟踪工具链修复）
+- 覆盖率补充至 ≥95%（错误渲染分支与 mock 防御路径）
+- transport-async：mTLS 双向客户端证书（@tls API 支持后）

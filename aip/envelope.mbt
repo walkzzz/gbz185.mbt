@@ -60,6 +60,13 @@ pub(all) struct AipEnvelope {
 }
 
 ///|
+/// 消息标识单源（GB/Z 185.6）：`sender_urn#seq`——接收侧 AipMessage::message_id 由此生成
+/// Single-source message identity (GB/Z 185.6): `sender_urn#seq`, used by AipMessage::message_id on the receive side.
+pub fn AipEnvelope::message_id(self : AipEnvelope) -> String {
+  "\{self.sender_urn}#\{self.seq}"
+}
+
+///|
 pub extend AipEnvelope with Eq::{equal, not_equal}
 
 ///|

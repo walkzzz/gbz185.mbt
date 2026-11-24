@@ -32,6 +32,13 @@ pub fn IdentityStatus::from_wire(s : String) -> IdentityStatus? {
 }
 
 ///|
+/// 身份状态是否可用（仅 Active 允许交互；其余状态一律拒绝）
+/// Whether the identity is usable (only Active allows interaction).
+pub fn IdentityStatus::is_active(self : IdentityStatus) -> Bool {
+  self is Active
+}
+
+///|
 #derive(Eq, Debug)
 pub(all) struct AgentIdentity {
   aic : String
@@ -68,6 +75,13 @@ pub fn aic_validate(oid : String) -> Bool {
 /// Stack-local AIC allocation prefix (illustrative OID segment; official assignment is governed by the ACPs registry service).
 pub fn aic_has_stack_prefix(oid : String) -> Bool {
   oid.has_prefix("1.2.156.185.2.")
+}
+
+///|
+/// 身份是否可用于交互（状态投影；仅 Active 为真）
+/// Whether the identity can be used for interaction (status projection; true only for Active).
+pub fn AgentIdentity::is_active(self : AgentIdentity) -> Bool {
+  self.identity_status.is_active()
 }
 
 ///|

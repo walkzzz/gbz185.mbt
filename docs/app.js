@@ -1,11 +1,83 @@
-import { aip_make_envelope, aip_validate, aip_fanout_count, aip_next_seq } from "./playground.js";
+import {
+  aip_make_envelope,
+  aip_validate,
+  aip_fanout_count,
+  aip_next_seq,
+  aip_envelope_meta,
+  aip_protocol_flow,
+  capability_report,
+  discovery_match,
+  identity_aic_check,
+  route_resolve,
+  tool_descriptor_check,
+} from "./playground.js";
 
 const $ = (sel) => document.querySelector(sel);
-const setOut = (id, text) => {
-  $(id).textContent = text;
-};
+const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
-function encode() {
+/* ---------- 输出渲染 ---------- */
+
+function pretty(text) {
+  try {
+    return JSON.stringify(JSON.parse(text), null, 2);
+  } catch {
+    return String(text);
+  }
+}
+
+function isError(text) {
+  return typeof text === "string" && text.startsWith('{"ok":false');
+}
+
+function showOut(selector, text, ok) {
+  const node = $(selector);
+  if (!node) return;
+  node.textContent = pretty(text);
+  node.classList.toggle("ok", ok === true);
+  node.classList.toggle("bad", ok === false);
+}
+
+function showOk(selector, text) {
+  showOut(selector, text, true);
+}
+
+function showBad(selector, text) {
+  showOut(selector, text, false);
+}
+
+/* ---------- 主题 ---------- */
+
+const THEME_KEY = "gbz185-mbt-theme";
+const themeToggle = $("#theme-toggle");
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  if (themeToggle) {
+    themeToggle.textContent = theme === "dark" ? "◐" : "☀";
+    themeToggle.setAttribute(
+      "aria-label",
+      theme === "dark" ? "切换到浅色主题" : "切换到深色主题",
+    );
+    themeToggle.title = themeToggle.getAttribute("aria-label");
+  }
+}
+
+if (themeToggle) {
+  themeToggle.addEventListener("click", () => {
+    const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    applyTheme(next);
+    try {
+      localStorage.setItem(THEME_KEY, next);
+    } catch {
+      /* 隐私模式忽略 */
+    }
+  });
+  applyTheme(document.documentElement.dataset.theme === "light" ? "light" : "dark");
+}
+
+/* ---------- 演示动作 ---------- */
+
+function runEncode() {
   const sender = $("#sender").value.trim();
   const recipient = $("#recipient").value.trim();
   const seq = Number($("#seq").value);
@@ -13,46 +85,168 @@ function encode() {
   const kind = $("#kind").value;
   const payload = $("#payload").value;
   if (!Number.isFinite(seq) || !Number.isFinite(timestamp)) {
-    setOut("#encode-out", "错误：seq / timestamp 必须是数字");
+    showBad("#encode-out", '{"ok":false,"error":"seq / timestamp 必须是数字"}');
     return;
   }
-  try {
-    const json = aip_make_envelope(sender, recipient, seq | 0, timestamp | 0, kind, payload);
-    setOut("#encode-out", json);
-    $("#json").value = json;
-  } catch (e) {
-    setOut("#encode-out", "调用失败：" + e.message);
+  const text = aip_make_envelope(sender, recipient, seq | 0, timestamp | 0, kind, payload);
+  if (isError(text)) {
+    showBad("#encode-out", text);
+    return;
+  }
+  showOk("#encode-out", text);
+  $("#json").value = text;
+}
+
+function runValidate() {
+  const ok = aip_validate($("#json").value);
+  if (ok) {
+    showOk("#check-out", '{"ok":true,"verdict":"合法 AIP 信封（版本/协议/字段/kind 均通过）"}');
+  } else {
+    showBad("#check-out", '{"ok":false,"verdict":"非法信封（版本/协议/字段/kind 任一不匹配）"}');
   }
 }
 
-function validate() {
-  const json = $("#json").value;
-  try {
-    const ok = aip_validate(json);
-    setOut("#check-out", ok ? "✅ 合法 AIP 信封（版本/协议/字段/kind 均通过）" : "❌ 非法信封（版本/协议/字段/kind 任一不匹配）");
-  } catch (e) {
-    setOut("#check-out", "调用失败：" + e.message);
+function runFanout() {
+  const n = aip_fanout_count($("#json").value, $("#members").value);
+  if (n >= 0) {
+    showOk("#check-out", JSON.stringify({ ok: true, fanout_count: n }));
+  } else {
+    showBad("#check-out", '{"ok":false,"error":"无法扇出：信封非法"}');
   }
 }
 
-function fanout() {
-  try {
-    const n = aip_fanout_count($("#json").value, $("#members").value);
-    setOut("#check-out", n >= 0 ? `✅ 扇出 ${n} 个成员信封（每个 recipient_urn 替换为成员 URN）` : "❌ 无法扇出：信封非法");
-  } catch (e) {
-    setOut("#check-out", "调用失败：" + e.message);
-  }
-}
-
-function nextSeq() {
+function runNext() {
   const cur = Number($("#curseq").value);
   if (!Number.isFinite(cur)) {
-    setOut("#seq-out", "错误：seq 必须是数字");
+    showBad("#seq-out", '{"ok":false,"error":"seq 必须是数字"}');
     return;
   }
   const next = aip_next_seq(cur | 0);
-  setOut("#seq-out", `seq ${cur} → ${next}（单调 +1，防重放）`);
+  showOk("#seq-out", JSON.stringify({ ok: true, prev: cur, next, monotonic: next > cur }));
 }
+
+function runMeta() {
+  const text = aip_envelope_meta($("#meta-json").value);
+  (isError(text) ? showBad : showOk)("#meta-out", text);
+}
+
+function runFlow() {
+  const text = aip_protocol_flow(
+    $("#flow-node").value.trim(),
+    $("#flow-peers").value,
+    $("#flow-kind").value,
+    $("#flow-payload").value,
+  );
+  (isError(text) ? showBad : showOk)("#flow-out", text);
+}
+
+function runCaps() {
+  const text = capability_report($("#caps").value, $("#required").value);
+  (isError(text) ? showBad : showOk)("#caps-out", text);
+}
+
+function runMatch() {
+  const text = discovery_match(
+    $("#nodes").value,
+    $("#filter").value,
+    $("#discoverable").checked,
+  );
+  (isError(text) ? showBad : showOk)("#match-out", text);
+}
+
+function runAic() {
+  const text = identity_aic_check($("#aic").value.trim());
+  if (isError(text)) {
+    showBad("#aic-out", text);
+    return;
+  }
+  let ok = false;
+  try {
+    ok = JSON.parse(text).valid === true;
+  } catch {
+    ok = false;
+  }
+  (ok ? showOk : showBad)("#aic-out", text);
+}
+
+function runRoute() {
+  const text = route_resolve(
+    $("#group").value.trim(),
+    $("#route-members").value,
+    $("#route-recipient").value.trim(),
+  );
+  (isError(text) ? showBad : showOk)("#route-out", text);
+}
+
+function runTool() {
+  const text = tool_descriptor_check(
+    $("#tool-name").value.trim(),
+    $("#tool-desc").value.trim(),
+    $("#tool-schema").value,
+    $("#tool-binding").value,
+    $("#tool-server").value.trim(),
+  );
+  (isError(text) ? showBad : showOk)("#tool-out", text);
+}
+
+function runHero() {
+  const text = aip_protocol_flow(
+    "urn:agent:walkzzz:hero",
+    "urn:agent:peer-a, urn:agent:peer-b",
+    "task_request",
+    '{"text":"hello from MoonBit"}',
+  );
+  if (isError(text)) {
+    $("#hero-envelope").textContent = text;
+    $("#hero-status").textContent = "流程失败";
+    return;
+  }
+  let data = null;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    data = null;
+  }
+  if (!data) return;
+  $("#hero-seq").textContent = String(data.outbox_seq);
+  $("#hero-delivered").textContent = String(data.peer_watermark);
+  $("#hero-peers").textContent = String((data.peers || []).length);
+  $("#hero-envelope").textContent = JSON.stringify(
+    {
+      message_id: data.message_id,
+      registered: data.is_registered,
+      delivered: data.delivered,
+      peers: data.peers,
+    },
+    null,
+    2,
+  );
+  $("#hero-status").textContent = data.delivered
+    ? "已投递（receive 校验通过）"
+    : "投递失败";
+}
+
+const ACTIONS = {
+  encode: runEncode,
+  validate: runValidate,
+  fanout: runFanout,
+  next: runNext,
+  meta: runMeta,
+  flow: runFlow,
+  caps: runCaps,
+  match: runMatch,
+  aic: runAic,
+  route: runRoute,
+  tool: runTool,
+  hero: runHero,
+};
+
+$$("button[data-run]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const action = ACTIONS[button.dataset.run];
+    if (action) action();
+  });
+});
 
 const PRESETS = {
   event: {
@@ -67,25 +261,121 @@ const PRESETS = {
   },
 };
 
-document.querySelectorAll("button[data-run]").forEach((b) => {
-  b.addEventListener("click", () => {
-    const kind = b.dataset.run;
-    if (kind === "encode") encode();
-    else if (kind === "validate") validate();
-    else if (kind === "fanout") fanout();
-    else if (kind === "next") nextSeq();
-  });
-});
-document.querySelectorAll("button[data-preset]").forEach((b) => {
-  b.addEventListener("click", () => {
-    const p = PRESETS[b.dataset.preset];
-    $("#kind").value = p.kind;
-    $("#payload").value = p.payload;
-    $("#seq").value = String(p.seq);
-    encode();
+$$("button[data-preset]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const preset = PRESETS[button.dataset.preset];
+    if (!preset) return;
+    $("#kind").value = preset.kind;
+    $("#payload").value = preset.payload;
+    $("#seq").value = String(preset.seq);
+    runEncode();
   });
 });
 
-setOut("#encode-out", "已加载（JavaScript / MoonBit 同源实现）：点击「编码」。");
-setOut("#check-out", "等待操作…");
-setOut("#seq-out", "等待推进…");
+const ENTER_ACTIONS = [
+  ["#sender", "encode"],
+  ["#recipient", "encode"],
+  ["#seq", "encode"],
+  ["#timestamp", "encode"],
+  ["#payload", "encode"],
+  ["#curseq", "next"],
+  ["#flow-node", "flow"],
+  ["#flow-peers", "flow"],
+  ["#flow-payload", "flow"],
+  ["#caps", "caps"],
+  ["#required", "caps"],
+  ["#filter", "match"],
+  ["#aic", "aic"],
+  ["#group", "route"],
+  ["#route-recipient", "route"],
+  ["#tool-name", "tool"],
+  ["#tool-desc", "tool"],
+  ["#tool-schema", "tool"],
+  ["#tool-server", "tool"],
+];
+
+ENTER_ACTIONS.forEach(([selector, action]) => {
+  const field = $(selector);
+  if (!field) return;
+  field.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    const button = $(`button[data-run="${action}"]`);
+    if (button) button.click();
+  });
+});
+
+/* ---------- 复制 ---------- */
+
+async function copyText(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+  const area = document.createElement("textarea");
+  area.value = text;
+  area.setAttribute("readonly", "");
+  area.style.position = "fixed";
+  area.style.opacity = "0";
+  document.body.appendChild(area);
+  area.select();
+  document.execCommand("copy");
+  document.body.removeChild(area);
+}
+
+$$("[data-copy-target]").forEach((button) => {
+  button.addEventListener("click", async () => {
+    const target = document.getElementById(button.dataset.copyTarget);
+    if (!target) return;
+    const original = button.textContent;
+    try {
+      await copyText(target.textContent.trim());
+      button.textContent = "已复制";
+    } catch {
+      button.textContent = "复制失败";
+    }
+    setTimeout(() => {
+      button.textContent = original;
+    }, 1400);
+  });
+});
+
+/* ---------- 导航高亮 ---------- */
+
+const navLinks = $$(".nav a");
+const sections = navLinks
+  .map((link) => document.querySelector(link.getAttribute("href")))
+  .filter(Boolean);
+
+if ("IntersectionObserver" in window && sections.length > 0) {
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        navLinks.forEach((link) => {
+          link.classList.toggle(
+            "active",
+            link.getAttribute("href") === `#${entry.target.id}`,
+          );
+        });
+      });
+    },
+    { rootMargin: "-45% 0px -50% 0px", threshold: 0 },
+  );
+  sections.forEach((section) => observer.observe(section));
+}
+
+/* ---------- 初始化 ---------- */
+
+runHero();
+runEncode();
+runValidate();
+runFanout();
+runNext();
+runMeta();
+runFlow();
+runCaps();
+runMatch();
+runAic();
+runRoute();
+runTool();

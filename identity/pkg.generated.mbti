@@ -24,6 +24,7 @@ pub(all) struct AgentIdentity {
 }
 pub fn AgentIdentity::equal(Self, Self) -> Bool
 pub fn AgentIdentity::from_json(@json.Json) -> Self raise @wire.JsonWireError
+pub fn AgentIdentity::is_active(Self) -> Bool
 pub fn AgentIdentity::not_equal(Self, Self) -> Bool
 pub fn AgentIdentity::to_json(Self) -> @json.Json
 pub fn AgentIdentity::to_repr(Self) -> @debug.Repr
@@ -37,6 +38,7 @@ pub(all) enum IdentityStatus {
 }
 pub fn IdentityStatus::equal(Self, Self) -> Bool
 pub fn IdentityStatus::from_wire(String) -> Self?
+pub fn IdentityStatus::is_active(Self) -> Bool
 pub fn IdentityStatus::not_equal(Self, Self) -> Bool
 pub fn IdentityStatus::to_repr(Self) -> @debug.Repr
 pub fn IdentityStatus::to_wire(Self) -> String

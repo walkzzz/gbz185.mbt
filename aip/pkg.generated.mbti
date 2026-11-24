@@ -55,6 +55,7 @@ pub(all) struct AipEnvelope {
 }
 pub fn AipEnvelope::equal(Self, Self) -> Bool
 pub fn AipEnvelope::from_json(@json.Json) -> Self raise @wire.JsonWireError
+pub fn AipEnvelope::message_id(Self) -> String
 pub fn AipEnvelope::not_equal(Self, Self) -> Bool
 pub fn AipEnvelope::to_json(Self) -> @json.Json
 pub fn AipEnvelope::to_repr(Self) -> @debug.Repr
@@ -85,10 +86,14 @@ pub fn AipProtocol::dispatch(Self, MessageKind, String, @json.Json) -> AipEnvelo
 pub fn AipProtocol::handle_discover_response(Self, DiscoverResponse) -> Int32
 pub fn AipProtocol::handle_register_response(Self, RegisterResponse) -> Unit raise AipError
 pub fn AipProtocol::identity(Self) -> @identity.AgentIdentity
+pub fn AipProtocol::inbox_watermark(Self, String) -> Int64
 pub fn AipProtocol::invariant(Self) -> Bool
+pub fn AipProtocol::is_registered(Self) -> Bool
 pub fn AipProtocol::new(@discovery.AgentNode) -> Self
+pub fn AipProtocol::outbox_seq(Self) -> Int64
 pub fn AipProtocol::peer(Self, String) -> @discovery.AgentNode?
 pub fn AipProtocol::peer_count(Self) -> Int32
+pub fn AipProtocol::peer_urns(Self) -> Array[String]
 pub fn AipProtocol::receive(Self, AipEnvelope) -> AipMessage raise AipError
 pub fn AipProtocol::register_request(Self) -> RegisterRequest
 pub fn AipProtocol::self_urn(Self) -> String
@@ -108,11 +113,15 @@ pub fn AipSession::close(Self) -> Unit
 pub fn AipSession::equal(Self, Self) -> Bool
 pub fn AipSession::inbox_watermark(Self) -> Int64
 pub fn AipSession::is_active(Self) -> Bool
+pub fn AipSession::local_urn(Self) -> String
 pub fn AipSession::message_count(Self) -> Int32
 pub fn AipSession::not_equal(Self, Self) -> Bool
 pub fn AipSession::open(String, String, String) -> Self
+pub fn AipSession::outbox_seq(Self) -> Int64
 pub fn AipSession::recv(Self, AipEnvelope) -> AipMessage raise AipError
+pub fn AipSession::remote_urn(Self) -> String
 pub fn AipSession::send(Self, MessageKind, @json.Json) -> AipEnvelope raise AipError
+pub fn AipSession::session_id(Self) -> String
 pub fn AipSession::to_repr(Self) -> @debug.Repr
 
 #derive(Eq, @debug.Debug)
@@ -200,6 +209,7 @@ pub struct RouteTable {
 pub fn RouteTable::add_group(Self, String) -> Unit
 pub fn RouteTable::add_peer(Self, String, String) -> Unit
 pub fn RouteTable::group_count(Self) -> Int32
+pub fn RouteTable::is_member(Self, String, String) -> Bool
 pub fn RouteTable::join(Self, String, String) -> Unit
 pub fn RouteTable::leave(Self, String, String) -> Bool
 pub fn RouteTable::members(Self, String) -> Array[String]

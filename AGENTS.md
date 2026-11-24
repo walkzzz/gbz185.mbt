@@ -17,10 +17,30 @@ gbz185.mbt 是国标协议栈**库**（非应用）：wire 统一错误契约 + 
 
 ```bash
 moon check --deny-warn --target all   # 四目标零警告（native/js/wasm/wasm-gc）
-moon test --target native             # 77/77（seed 固定可复现）
+moon test --target native             # 124/124（seed 固定可复现）
+moon test --target js                 # 117/117；wasm / wasm-gc 同（transport_async 为 native-only）
 moon fmt                              # 格式化
 moon info                             # 更新 .mbti 契约（git 入库，diff 必查）
-node scripts/check_pages.mjs          # 展示页自检（资源 / JS 导出 / AIP 编解码语义）
+moon bench --target native            # 4 项基准（dispatch / lookup / wire / 能力检索）
+node scripts/check_pages.mjs          # 展示页自检（结构 / 钩子 / 11 导出 / AIP 语义，131 项）
+```
+
+覆盖率（Windows 下 `moon coverage report` 对 `transport-async` 连字符包名有路径拼接缺陷，故显式传核心 trace）：
+
+```bash
+moon coverage clean
+moon test --target native --enable-coverage --no-parallelize
+moon coverage report -f full_summary \
+  _build/native/debug/test/gbz185.mbt.trace.source \
+  _build/native/debug/test/wire/wire.trace.source \
+  _build/native/debug/test/identity/identity.trace.source \
+  _build/native/debug/test/registry/registry.trace.source \
+  _build/native/debug/test/capability/capability.trace.source \
+  _build/native/debug/test/discovery/discovery.trace.source \
+  _build/native/debug/test/aip/aip.trace.source \
+  _build/native/debug/test/tooling/tooling.trace.source \
+  _build/native/debug/test/verify/verify.trace.source
+# 目标：>= 811/883 = 91.8%
 ```
 
 形式化验证走 WSL（Windows 本地 moon prove 有 `\\?` mkdir 平台 bug——EINVAL/EACCES，勿反复重试）：
@@ -42,5 +62,8 @@ wsl -e bash -c "cd /mnt/e/AA_WP/forMoonHankson/gbz185.mbt && ~/.moon/bin/moon pr
 - 函数值字段调用必须括号：`(entry.handler)(inv)`。
 - 注释纪律：中英双语 doc 只写非自明语义，禁止零价值注释。
 - 文档即实现：任何协议语义变更先改 `docs/TEST_REPORT.md` 对应节，再动实现。
-- 变异基线：`scripts/mutation_test.mbtx` 12 变异点全 KILLED（击杀率 100%）是回归红线。
+- 变异基线：`scripts/mutation_test.mbtx` 19 变异点全 KILLED（击杀率 100%）是回归红线；变异 old_sub 必须随实现演进同步更新（曾因签名重构出现 NOT-APPLIED）。
 - 已知边界见 `docs/known-gaps.md`（真话台账），README 只写能力不写尚未兑现的承诺。
+- 排序语义：MoonBit `Compare for String` 是 shortlex（长度优先）——不要假设 `sort()` 为字典序；新增确定性清单 API 须在 doc 中写明。
+- 覆盖率口径：native 插桩点（`full_summary`），排除 transport_async/playground/examples；数字变更须同步 README / docs / TEST_REPORT 三处。
+- 新增 API 纪律：每个公开函数至少一处黑盒断言 + 可被变异矩阵覆盖（当前 19 点全部有对应断言）。

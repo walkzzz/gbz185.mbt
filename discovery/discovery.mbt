@@ -69,6 +69,23 @@ pub fn AgentNode::from_json(j : Json) -> AgentNode raise @wire.JsonWireError {
 }
 
 ///|
+/// 单节点匹配（ADP 检索的原子判定）：可见性过滤 + 能力覆盖过滤（filter 为空表示不过滤）
+/// Single-node match (the atom of ADP retrieval): visibility filter + capability coverage filter (an empty filter means no filtering).
+pub fn AgentNode::matches(
+  self : AgentNode,
+  filter_capabilities : ArrayView[String],
+  require_discoverable~ : Bool = true,
+) -> Bool {
+  if require_discoverable && !self.discoverable {
+    return false
+  }
+  if filter_capabilities.length() > 0 && !self.acs.covers(filter_capabilities) {
+    return false
+  }
+  true
+}
+
+///|
 /// ADP 检索与匹配：discoverable 可见性过滤 + 能力覆盖过滤（filter 为空表示不过滤）
 /// ADP retrieval and matching: discoverable visibility filter + capability coverage filter (an empty filter means no filtering).
 pub fn match_nodes(
@@ -78,13 +95,9 @@ pub fn match_nodes(
 ) -> Array[AgentNode] {
   let out : Array[AgentNode] = []
   for node in nodes {
-    if require_discoverable && !node.discoverable {
-      continue
+    if node.matches(filter_capabilities, require_discoverable~) {
+      out.push(node)
     }
-    if filter_capabilities.length() > 0 && !node.acs.covers(filter_capabilities) {
-      continue
-    }
-    out.push(node)
   }
   out
 }

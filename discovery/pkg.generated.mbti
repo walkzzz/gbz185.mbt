@@ -29,6 +29,7 @@ pub(all) struct AgentNode {
 pub fn AgentNode::equal(Self, Self) -> Bool
 pub fn AgentNode::from_frontmatter(String, String, @identity.IdentityStatus, Bool, Array[String], Array[String], Array[String]) -> Self
 pub fn AgentNode::from_json(@json.Json) -> Self raise @wire.JsonWireError
+pub fn AgentNode::matches(Self, ArrayView[String], require_discoverable? : Bool) -> Bool
 pub fn AgentNode::not_equal(Self, Self) -> Bool
 pub fn AgentNode::to_json(Self) -> @json.Json
 pub fn AgentNode::to_repr(Self) -> @debug.Repr

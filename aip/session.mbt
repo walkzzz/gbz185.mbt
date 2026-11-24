@@ -53,6 +53,30 @@ pub fn AipSession::open(
 }
 
 ///|
+/// 会话标识（调用方生成并保证唯一）
+pub fn AipSession::session_id(self : AipSession) -> String {
+  self.session_id
+}
+
+///|
+/// 会话本端 URN
+pub fn AipSession::local_urn(self : AipSession) -> String {
+  self.self_urn
+}
+
+///|
+/// 会话对端 URN
+pub fn AipSession::remote_urn(self : AipSession) -> String {
+  self.peer_urn
+}
+
+///|
+/// 会话内发送序号（最近一次 send 分配；未发送为 0）
+pub fn AipSession::outbox_seq(self : AipSession) -> Int64 {
+  self.outbox_seq
+}
+
+///|
 pub fn AipSession::is_active(self : AipSession) -> Bool {
   self.state is Open
 }

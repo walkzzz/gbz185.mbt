@@ -1,97 +1,517 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>gbz185.mbt · GB/Z 185-2026 智能体互联（浏览器内 AIP 演示）</title>
-  <meta name="description" content="GB/Z 185-2026 智能体互联协议栈（AIP）的纯 MoonBit 实现：信封编码/校验、会话、群组扇出、形式化验证。页面内的编解码由编译到 JavaScript 的同一份 MoonBit 实现完成。" />
+  <title>gbz185.mbt — GB/Z 185-2026 智能体互联协议栈 · 浏览器内演示</title>
+  <meta name="description" content="walkzzz/gbz185.mbt：GB/Z 185.1-185.7 七部分智能体互联协议栈的纯 MoonBit 实现 —— AIC 身份码、ATR 注册表、ACS 能力描述、ADP 发现、AIP 信封/防重放、群组扇出、工具调用。sans-I/O 核心、零第三方运行时依赖、四目标同源、19 点变异全 KILLED。" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="gbz185.mbt — GB/Z 185-2026 智能体互联协议栈" />
+  <meta property="og:description" content="七部分国标协议建模 + 形式化验证；AIP 编解码、能力匹配、发现过滤与群组扇出在浏览器内实时运行。" />
+  <meta property="og:url" content="https://walkzzz.github.io/gbz185.mbt/" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="theme-color" content="#1d4ed8" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%230b1220'/><path d='M14 42 L26 22 L38 42 L50 22' fill='none' stroke='%2360a5fa' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/><circle cx='32' cy='50' r='4' fill='%2322d3ee'/></svg>" />
   <link rel="stylesheet" href="style.css" />
+  <script>
+    (function () {
+      var saved = null;
+      try { saved = localStorage.getItem("gbz185-mbt-theme"); } catch (e) { saved = null; }
+      var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.dataset.theme = saved || (prefersDark ? "dark" : "light");
+    })();
+  </script>
 </head>
 <body>
-  <header class="hero">
-    <p class="eyebrow">MoonBit · GB/Z 185-2026 智能体互联 · 零 C FFI</p>
-    <h1>gbz185.mbt</h1>
-    <p class="tagline">AIP 协议栈的纯 MoonBit 实现</p>
-    <p class="sub">
-      信封（envelope）编解码、会话收发、群组扇出与形式化验证。
-      下面的规范化与校验由编译到 JavaScript 的同一份 MoonBit 实现实时完成。
-    </p>
-    <div class="badges">
-      <span>77 / 77 测试 × 4 后端</span>
-      <span>moon prove 20 obligations</span>
-      <span>变异 12 / 12 KILLED</span>
-      <span>0.1.0</span>
-    </div>
-    <div class="links">
-      <a href="https://github.com/walkzzz/gbz185.mbt">GitHub</a>
-      <a href="https://mooncakes.io/docs/walkzzz/gbz185.mbt">mooncakes</a>
-      <a href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/TEST_REPORT.md">测试报告</a>
-      <a href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/known-gaps.md">已知边界</a>
+  <a class="skip-link" href="#main">跳到主内容</a>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#top">
+        <span class="brand-mark" aria-hidden="true">185</span>
+        <span class="brand-name">gbz185.mbt</span>
+        <span class="brand-ver">v0.2.0</span>
+      </a>
+      <nav class="nav" aria-label="主导航">
+        <a href="#features">能力</a>
+        <a href="#demo">在线演示</a>
+        <a href="#start">快速开始</a>
+        <a href="#api">API</a>
+        <a href="#quality">工程质量</a>
+        <a href="#docs">文档</a>
+      </nav>
+      <div class="topbar-actions">
+        <button id="theme-toggle" class="icon-btn" type="button" title="切换深浅主题" aria-label="切换深浅主题">◐</button>
+        <a class="gh-btn" href="https://github.com/walkzzz/gbz185.mbt" target="_blank" rel="noreferrer">GitHub</a>
+      </div>
     </div>
   </header>
 
-  <main>
-    <section class="card">
-      <h2>信封编码 <span class="tag">aip_make_envelope</span></h2>
-      <div class="grid2">
-        <label>sender URN <input id="sender" value="urn:agent:walkzzz:demo" /></label>
-        <label>recipient URN <input id="recipient" value="urn:agent:peer" /></label>
-        <label>seq <input id="seq" value="1" inputmode="numeric" /></label>
-        <label>timestamp <input id="timestamp" value="1700000000" inputmode="numeric" /></label>
-        <label>kind
-          <select id="kind">
-            <option value="task_request">task_request</option>
-            <option value="task_result">task_result</option>
-            <option value="event">event</option>
-            <option value="heartbeat">heartbeat</option>
-          </select>
-        </label>
-        <label>payload JSON <input id="payload" value='{"text":"hello AIP"}' /></label>
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="hero-text">
+        <p class="eyebrow">MoonBit · GB/Z 185.1-185.7 · sans-I/O</p>
+        <h1>gbz185.mbt</h1>
+        <p class="tagline">智能体互联国标协议栈的纯 MoonBit 实现</p>
+        <p class="sub">
+          七部分协议建模：AIC 身份码、ATR 注册表、ACS 能力描述、ADP 发现、AIP 信封与防重放、群组扇出、工具调用。
+          协议核心 sans-I/O、核心包零第三方运行时依赖、四目标共用同一份代码。
+          右侧流程与下方全部结果由编译到 JavaScript 的同一份 MoonBit 实现实时完成。
+        </p>
+        <div class="cta">
+          <a class="btn primary" href="#demo">立即试用</a>
+          <a class="btn ghost" href="#start">快速开始</a>
+        </div>
+        <ul class="badges" aria-label="项目指标">
+          <li>124 测试（native）</li>
+          <li>117 × 3 便携目标</li>
+          <li>覆盖 91.8%</li>
+          <li>变异 19 / 19</li>
+        </ul>
       </div>
-      <div class="row">
-        <button data-run="encode">编码</button>
-        <button data-preset="event">预置：Event</button>
-        <button data-preset="heartbeat">预置：Heartbeat</button>
+
+      <div class="hero-card" aria-label="浏览器内 AIP 流程">
+        <div class="hero-card-head">
+          <span class="dot" aria-hidden="true"></span>
+          <span class="dot" aria-hidden="true"></span>
+          <span class="dot" aria-hidden="true"></span>
+          <span class="hero-card-title">playground.js · 注册 → 发现 → 分发 → 接收</span>
+        </div>
+        <dl class="wasm-stats">
+          <div><dt>发送序号</dt><dd id="hero-seq">—</dd></div>
+          <div><dt>对端水位</dt><dd id="hero-delivered">—</dd></div>
+          <div><dt>已发现对端</dt><dd id="hero-peers">—</dd></div>
+        </dl>
+        <pre id="hero-envelope" class="hero-envelope">正在运行 MoonBit…</pre>
+        <p class="hero-meta"><span id="hero-status">正在运行…</span> · 无后端 · 无第三方请求</p>
       </div>
-      <output id="encode-out">等待编码…</output>
     </section>
 
-    <section class="card">
-      <h2>校验与扇出 <span class="tag">aip_validate / aip_fanout_count</span></h2>
-      <label>信封 JSON（可粘贴上一步输出）
-        <textarea id="json" rows="5" spellcheck="false">{"envelope_version":"1","protocol":"aip","sender_urn":"urn:agent:a","recipient_urn":"urn:agent:b","seq":1,"timestamp":1700000000,"kind":"task_request","payload":{"text":"hi"}}</textarea>
-      </label>
-      <div class="row">
-        <button data-run="validate">校验</button>
-        <button data-run="fanout">群组扇出</button>
+    <section class="section" id="features">
+      <div class="section-head">
+        <p class="kicker">Capabilities</p>
+        <h2>协议栈该有的边界与证明</h2>
+        <p class="lede">十个包对应国标分部与公共层；鉴权、工具绑定与传输全部 trait/闭包注入，协议语义不因扩展而漂移。</p>
       </div>
-      <label>群组成员（逗号分隔）<input id="members" value="urn:agent:m1, urn:agent:m2, urn:agent:m3" /></label>
-      <output id="check-out">等待操作…</output>
+      <div class="feature-grid">
+        <a class="feature" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/architecture.md" target="_blank" rel="noreferrer">
+          <span class="feature-no">01</span><h3>185.1 总体架构</h3><p>双模式（本地/互联）、全局模型五表、互联五角色。</p><code>ArchitectureMode</code>
+        </a>
+        <a class="feature" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/architecture.md" target="_blank" rel="noreferrer">
+          <span class="feature-no">02</span><h3>185.2 AIC 身份码</h3><p>点分十进制逐字符状态机校验；本栈段前缀查询。</p><code>aic_validate</code>
+        </a>
+        <a class="feature" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/architecture.md" target="_blank" rel="noreferrer">
+          <span class="feature-no">03</span><h3>185.3 ATR 注册表</h3><p>AIC 分配、凭证有效期与续期、容量防护、审计事件、能力检索。</p><code>TokenRegistry</code>
+        </a>
+        <a class="feature" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/architecture.md" target="_blank" rel="noreferrer">
+          <span class="feature-no">04</span><h3>185.4 ACS 能力</h3><p>全量覆盖、任一匹配与缺失诊断；长度剪枝检索严格等价。</p><code>covers · missing · covers_any</code>
+        </a>
+        <a class="feature" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/architecture.md" target="_blank" rel="noreferrer">
+          <span class="feature-no">05</span><h3>185.5 ADP 发现</h3><p>可见性过滤 + 能力覆盖过滤，单节点原子判定与批量检索同源。</p><code>AgentNode::matches · match_nodes</code>
+        </a>
+        <a class="feature" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/architecture.md" target="_blank" rel="noreferrer">
+          <span class="feature-no">06</span><h3>185.6 AIP 交互</h3><p>信封编解码、单调序号防重放、消息标识单源、会话状态机。</p><code>dispatch · receive · message_id</code>
+        </a>
+        <a class="feature" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/architecture.md" target="_blank" rel="noreferrer">
+          <span class="feature-no">07</span><h3>群组路由与扇出</h3><p>群组 URN 解析、成员增删、扇出展开与确定性成员清单。</p><code>RouteTable · fanout</code>
+        </a>
+        <a class="feature" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/architecture.md" target="_blank" rel="noreferrer">
+          <span class="feature-no">08</span><h3>185.7 工具调用</h3><p>ToolDescriptor 单源模型、MCP 视图、调用日志与批量调用。</p><code>ToolRegistry</code>
+        </a>
+        <a class="feature" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/security.md" target="_blank" rel="noreferrer">
+          <span class="feature-no">09</span><h3>统一错误契约</h3><p>ProtocolError（part/code/message）全栈 suberror 分型。</p><code>@wire.ProtocolError</code>
+        </a>
+        <a class="feature" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/known-gaps.md" target="_blank" rel="noreferrer">
+          <span class="feature-no">10</span><h3>传输扩展</h3><p>TCP NDJSON 与 TLS 对端指纹钉扎；核心 sans-I/O 零改动。</p><code>TcpChannel · TlsTcpChannel</code>
+        </a>
+        <a class="feature" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/migration.md" target="_blank" rel="noreferrer">
+          <span class="feature-no">11</span><h3>形式化验证</h3><p>moon prove + Z3：13 函数 / 20 条证明义务。</p><code>@verify</code>
+        </a>
+        <a class="feature" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/TEST_REPORT.md" target="_blank" rel="noreferrer">
+          <span class="feature-no">12</span><h3>质量门禁</h3><p>124 测试（native）/ 117 × 3 便携、91.8% 覆盖、19/19 变异。</p><code>test · mutation</code>
+        </a>
+      </div>
     </section>
 
-    <section class="card">
-      <h2>序号推进 <span class="tag">aip_next_seq</span></h2>
-      <p class="hint">对应 `verify.next_seq` 的运行时投影：<code>res == prev + 1 && res &gt; prev</code>（防重放链）。</p>
-      <div class="row">
-        <label>当前 seq <input id="curseq" value="41" inputmode="numeric" /></label>
-        <button data-run="next">推进</button>
+    <section class="section" id="demo">
+      <div class="section-head">
+        <p class="kicker">Live demo</p>
+        <h2>在浏览器里直接跑</h2>
+        <p class="lede">信封、校验、扇出、完整交互流程、能力匹配、发现过滤、身份码、路由与工具描述全部由同一份 MoonBit 编译产物在本地计算；页面不调用后端。</p>
       </div>
-      <output id="seq-out">等待推进…</output>
+
+      <div class="demo-grid">
+        <article class="card">
+          <header class="card-head">
+            <h3>信封编码</h3>
+            <a class="pkg-link" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/architecture.md" target="_blank" rel="noreferrer"><code>aip_make_envelope</code></a>
+          </header>
+          <p class="hint">构造 GB/Z 185.6 规范化信封：版本/协议/序号/时间戳/消息类型/载荷。</p>
+          <div class="row">
+            <label class="grow">sender URN <input id="sender" value="urn:agent:walkzzz:demo" /></label>
+            <label class="grow">recipient URN <input id="recipient" value="urn:agent:peer" /></label>
+          </div>
+          <div class="row">
+            <label>seq <input id="seq" value="1" inputmode="numeric" /></label>
+            <label>timestamp <input id="timestamp" value="1700000000" inputmode="numeric" /></label>
+            <label>kind
+              <select id="kind">
+                <option value="task_request">task_request</option>
+                <option value="task_result">task_result</option>
+                <option value="event">event</option>
+                <option value="heartbeat">heartbeat</option>
+              </select>
+            </label>
+          </div>
+          <div class="row">
+            <label class="grow">payload JSON <input id="payload" value='{"text":"hello AIP"}' /></label>
+          </div>
+          <div class="row">
+            <button type="button" data-run="encode">编码</button>
+            <button type="button" class="chip-btn" data-preset="event">预置：Event</button>
+            <button type="button" class="chip-btn" data-preset="heartbeat">预置：Heartbeat</button>
+          </div>
+          <div id="encode-out" class="out" aria-live="polite">等待编码…</div>
+        </article>
+
+        <article class="card">
+          <header class="card-head">
+            <h3>校验与扇出</h3>
+            <a class="pkg-link" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/TEST_REPORT.md" target="_blank" rel="noreferrer"><code>aip_validate · aip_fanout_count</code></a>
+          </header>
+          <p class="hint">校验版本/协议/字段/消息类型；群组扇出把 recipient 替换为每个成员。</p>
+          <label>信封 JSON（可粘贴上一步输出）
+            <textarea id="json" rows="5" spellcheck="false">{"envelope_version":"1","protocol":"aip","sender_urn":"urn:agent:a","recipient_urn":"urn:agent:b","seq":1,"timestamp":1700000000,"kind":"task_request","payload":{"text":"hi"}}</textarea>
+          </label>
+          <div class="row">
+            <button type="button" data-run="validate">校验</button>
+            <button type="button" data-run="fanout">群组扇出</button>
+          </div>
+          <div class="row">
+            <label class="grow">群组成员（逗号分隔）<input id="members" value="urn:agent:m1, urn:agent:m2, urn:agent:m3" /></label>
+          </div>
+          <div id="check-out" class="out" aria-live="polite">等待操作…</div>
+        </article>
+
+        <article class="card">
+          <header class="card-head">
+            <h3>信封元数据</h3>
+            <a class="pkg-link" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/architecture.md" target="_blank" rel="noreferrer"><code>aip_envelope_meta</code></a>
+          </header>
+          <p class="hint">解析信封字段与消息标识 <code>sender#seq</code>；与接收侧 AipMessage::message_id 同源。</p>
+          <label>信封 JSON
+            <textarea id="meta-json" rows="4" spellcheck="false">{"envelope_version":"1","protocol":"aip","sender_urn":"urn:agent:b","recipient_urn":"urn:agent:a","seq":9,"timestamp":0,"kind":"event","payload":{}}</textarea>
+          </label>
+          <div class="row">
+            <button type="button" data-run="meta">解析元数据</button>
+          </div>
+          <div id="meta-out" class="out" aria-live="polite">等待解析…</div>
+        </article>
+
+        <article class="card">
+          <header class="card-head">
+            <h3>序号推进</h3>
+            <a class="pkg-link" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/migration.md" target="_blank" rel="noreferrer"><code>aip_next_seq</code></a>
+          </header>
+          <p class="hint">对应 <code>verify.next_seq</code>：<code>res == prev + 1 &amp;&amp; res &gt; prev</code>（防重放链）。</p>
+          <div class="row">
+            <label class="grow">当前 seq <input id="curseq" value="41" inputmode="numeric" /></label>
+            <button type="button" data-run="next">推进</button>
+          </div>
+          <div id="seq-out" class="out" aria-live="polite">等待推进…</div>
+        </article>
+
+        <article class="card">
+          <header class="card-head">
+            <h3>AIP 完整流程</h3>
+            <a class="pkg-link" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/architecture.md" target="_blank" rel="noreferrer"><code>aip_protocol_flow</code></a>
+          </header>
+          <p class="hint">注册 → 发现 → 分发 → 对端接收：返回注册状态、发送序号、投递结果与对端水位。</p>
+          <div class="row">
+            <label class="grow">本端 URN <input id="flow-node" value="urn:agent:walkzzz:demo" /></label>
+            <label class="grow">对端（逗号分隔）<input id="flow-peers" value="urn:agent:peer" /></label>
+          </div>
+          <div class="row">
+            <label>kind
+              <select id="flow-kind">
+                <option value="task_request">task_request</option>
+                <option value="event">event</option>
+                <option value="heartbeat">heartbeat</option>
+              </select>
+            </label>
+            <label class="grow">payload JSON <input id="flow-payload" value='{"text":"hello"}' /></label>
+          </div>
+          <div class="row">
+            <button type="button" data-run="flow">运行流程</button>
+          </div>
+          <div id="flow-out" class="out" aria-live="polite">等待运行…</div>
+        </article>
+
+        <article class="card">
+          <header class="card-head">
+            <h3>能力匹配</h3>
+            <a class="pkg-link" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/architecture.md" target="_blank" rel="noreferrer"><code>capability_report</code></a>
+          </header>
+          <p class="hint">ACS 全量覆盖判定 + 能力条目数 + 缺失清单（保持需求顺序并去重）。</p>
+          <div class="row">
+            <label class="grow">具备能力 <input id="caps" value="skill:demo, tool:file_read" /></label>
+          </div>
+          <div class="row">
+            <label class="grow">需求能力 <input id="required" value="skill:demo, tool:net_fetch" /></label>
+          </div>
+          <div class="row">
+            <button type="button" data-run="caps">匹配</button>
+          </div>
+          <div id="caps-out" class="out" aria-live="polite">等待匹配…</div>
+        </article>
+
+        <article class="card">
+          <header class="card-head">
+            <h3>发现过滤</h3>
+            <a class="pkg-link" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/architecture.md" target="_blank" rel="noreferrer"><code>discovery_match</code></a>
+          </header>
+          <p class="hint">三个节点的 AgentNode JSON；按可见性与能力过滤，返回匹配 URN 与显示名。</p>
+          <label>节点数组 JSON
+            <textarea id="nodes" rows="6" spellcheck="false">[{"urn":"urn:agent:a","display_name":"A","identity":{"aic":"","identity_status":"active","cai_ref":null,"registered_at":null},"acs":{"capabilities":["skill:demo"],"default_input_types":[],"default_output_types":[],"constraints":[]},"discoverable":true,"endpoint":null},{"urn":"urn:agent:b","display_name":"B","identity":{"aic":"","identity_status":"active","cai_ref":null,"registered_at":null},"acs":{"capabilities":["tool:file_read"],"default_input_types":[],"default_output_types":[],"constraints":[]},"discoverable":true,"endpoint":null},{"urn":"urn:agent:c","display_name":"C (hidden)","identity":{"aic":"","identity_status":"active","cai_ref":null,"registered_at":null},"acs":{"capabilities":["skill:demo"],"default_input_types":[],"default_output_types":[],"constraints":[]},"discoverable":false,"endpoint":null}]</textarea>
+          </label>
+          <div class="row">
+            <label class="grow">需求能力 <input id="filter" value="skill:demo" /></label>
+          </div>
+          <label class="flag"><input id="discoverable" type="checkbox" checked /> 仅返回 discoverable 节点</label>
+          <div class="row">
+            <button type="button" data-run="match">匹配</button>
+          </div>
+          <div id="match-out" class="out" aria-live="polite">等待匹配…</div>
+        </article>
+
+        <article class="card">
+          <header class="card-head">
+            <h3>AIC 身份码</h3>
+            <a class="pkg-link" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/architecture.md" target="_blank" rel="noreferrer"><code>identity_aic_check</code></a>
+          </header>
+          <p class="hint">点分十进制、≥2 段、每段非空；同时返回是否本栈前缀 <code>1.2.156.185.2.</code>。</p>
+          <div class="row">
+            <label class="grow">AIC <input id="aic" value="1.2.156.185.2.1.42" /></label>
+            <button type="button" data-run="aic">校验</button>
+          </div>
+          <div id="aic-out" class="out" aria-live="polite">等待校验…</div>
+        </article>
+
+        <article class="card">
+          <header class="card-head">
+            <h3>路由解析</h3>
+            <a class="pkg-link" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/architecture.md" target="_blank" rel="noreferrer"><code>route_resolve</code></a>
+          </header>
+          <p class="hint">建群组并加入成员后解析 recipient：群组 → 扇出成员；未知目标 → 拒绝。</p>
+          <div class="row">
+            <label class="grow">群组 URN <input id="group" value="urn:agent:group:ops" /></label>
+            <label class="grow">recipient <input id="route-recipient" value="urn:agent:group:ops" /></label>
+          </div>
+          <div class="row">
+            <label class="grow">成员（逗号分隔）<input id="route-members" value="urn:agent:m1, urn:agent:m2" /></label>
+          </div>
+          <div class="row">
+            <button type="button" data-run="route">解析</button>
+          </div>
+          <div id="route-out" class="out" aria-live="polite">等待解析…</div>
+        </article>
+
+        <article class="card">
+          <header class="card-head">
+            <h3>工具描述</h3>
+            <a class="pkg-link" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/architecture.md" target="_blank" rel="noreferrer"><code>tool_descriptor_check</code></a>
+          </header>
+          <p class="hint">校验 ToolDescriptor 并生成 MCP tools/list 单源条目（name/description/inputSchema）。</p>
+          <div class="row">
+            <label class="grow">工具名 <input id="tool-name" value="net_fetch" /></label>
+            <label class="grow">描述 <input id="tool-desc" value="fetch a URL" /></label>
+          </div>
+          <div class="row">
+            <label class="grow">input schema <input id="tool-schema" value='{"type":"object","properties":{"url":{"type":"string"}}}' /></label>
+            <label>绑定
+              <select id="tool-binding">
+                <option value="mcp">mcp</option>
+                <option value="native">native</option>
+              </select>
+            </label>
+            <label>MCP server <input id="tool-server" value="server-a" /></label>
+          </div>
+          <div class="row">
+            <button type="button" data-run="tool">校验</button>
+          </div>
+          <div id="tool-out" class="out" aria-live="polite">等待校验…</div>
+        </article>
+      </div>
     </section>
 
-    <section class="card how">
-      <h2>这是怎么在浏览器里跑的？</h2>
-      <ol>
-        <li><code>playground/</code> 是 <code>pkgtype(kind: "foreign_library")</code> 的 MoonBit 包，用 <code>#export_name</code> 导出 4 个非 raise 包装函数。</li>
-        <li><code>moon build --target js --release playground</code> 生成 <code>playground.js</code>（同一份源码也可构建为 <code>wasm-gc</code> / <code>native</code>）。</li>
-        <li>页面直接 <code>import</code> 并调用：信封规范化、版本/协议/字段校验、群组扇出计数全部本地完成。</li>
-        <li>语义由 <code>verify/</code> 的 20 条证明义务与 77 项测试守护（见测试报告）。</li>
+    <section class="section" id="start">
+      <div class="section-head">
+        <p class="kicker">Get started</p>
+        <h2>一个库，十个包</h2>
+        <p class="lede">协议核心 sans-I/O；鉴权与工具绑定以 trait/闭包注入，传输作为扩展包接入。</p>
+      </div>
+      <div class="start-grid">
+        <div class="start-col">
+          <div class="code">
+            <div class="code-head"><span>安装</span><button type="button" class="copy" data-copy-target="cmd-install">复制</button></div>
+            <pre id="cmd-install"><code>moon add walkzzz/gbz185.mbt@0.2.0
+moon update</code></pre>
+          </div>
+          <div class="code">
+            <div class="code-head"><span>工程门禁</span><button type="button" class="copy" data-copy-target="cmd-gates">复制</button></div>
+            <pre id="cmd-gates"><code>moon check --deny-warn --target all
+moon test  --target native
+moon test  --target js
+moon coverage report -f full_summary
+moon run scripts/mutation_test.mbtx
+node scripts/check_pages.mjs</code></pre>
+          </div>
+          <div class="code">
+            <div class="code-head"><span>浏览器演示产物</span><button type="button" class="copy" data-copy-target="cmd-build">复制</button></div>
+            <pre id="cmd-build"><code>moon build --target js --release playground
+node scripts/serve_pages.mjs</code></pre>
+          </div>
+        </div>
+        <div class="start-col">
+          <div class="code">
+            <div class="code-head"><span>注册 → 发现 → 交互</span><button type="button" class="copy" data-copy-target="code-flow">复制</button></div>
+            <pre id="code-flow"><code>let node = @discovery.AgentNode::from_frontmatter(
+  "urn:agent:walkzzz:node-1", "演示智能体", @identity.NoIdentity, true,
+  ["skill:demo"], ["text"], ["text"],
+)
+let proto = @aip.AipProtocol::new(node)
+
+// GB/Z 185.3：接受注册响应（AIC 由注册中心分配）
+AipProtocol::handle_register_response(proto, { accepted: true, aic: Some(aic), reason: None })
+
+// GB/Z 185.5：吸收发现结果
+let added = AipProtocol::handle_discover_response(proto, { nodes: peers })
+
+// GB/Z 185.6：分发与接收
+let env = AipProtocol::dispatch(proto, @aip.TaskRequest, "urn:agent:peer", payload)
+AipProtocol::receive(peer_proto, env)</code></pre>
+          </div>
+          <div class="code">
+            <div class="code-head"><span>能力与发现匹配</span><button type="button" class="copy" data-copy-target="code-caps">复制</button></div>
+            <pre id="code-caps"><code>let acs = node.acs
+acs.covers(["skill:demo"])                    // 全量覆盖
+acs.covers_any(["tool:net_fetch", "x"])       // 任一匹配
+acs.missing(["skill:demo", "tool:net_fetch"]) // 缺失诊断
+
+let hits = @discovery.match_nodes(nodes[:], ["skill:demo"])
+let visible = node.matches(["skill:demo"], require_discoverable=false)</code></pre>
+          </div>
+          <div class="code">
+            <div class="code-head"><span>注册表与工具</span><button type="button" class="copy" data-copy-target="code-reg">复制</button></div>
+            <pre id="code-reg"><code>let reg = @registry.TokenRegistry::new(max_entries=1024)
+let aic = TokenRegistry::register(reg, node, verifier)
+let active = TokenRegistry::find_by_capability(reg, ["skill:demo"])
+
+let tools = @tooling.ToolRegistry::new()
+ToolRegistry::register(tools, descriptor, handler)
+let desc = ToolRegistry::lookup(tools, "net_fetch")</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="api">
+      <div class="section-head">
+        <p class="kicker">API map</p>
+        <h2>能力与入口</h2>
+        <p class="lede">完整签名见 <a href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/architecture.md">架构文档</a> 与各包 <code>pkg.generated.mbti</code>。</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>能力</th><th>入口</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td>身份码校验（185.2）</td><td><code>aic_validate</code> · <code>aic_has_stack_prefix</code></td><td>逐字符状态机；≥2 段十进制</td></tr>
+            <tr><td>身份可用性</td><td><code>IdentityStatus::is_active</code> · <code>AgentIdentity::is_active</code></td><td>仅 Active 允许交互</td></tr>
+            <tr><td>注册与生命周期（185.3）</td><td><code>register</code> · <code>authenticate</code> · <code>lock</code> · <code>revoke</code> · <code>renew</code></td><td>CAI 校验注入</td></tr>
+            <tr><td>注册表查询</td><td><code>is_registered</code> · <code>urn_list</code> · <code>find_by_capability</code></td><td>active 过滤 + 长度剪枝</td></tr>
+            <tr><td>能力匹配（185.4）</td><td><code>covers</code> · <code>covers_any</code> · <code>missing</code> · <code>count</code></td><td>覆盖 / 任一 / 缺失诊断</td></tr>
+            <tr><td>发现（185.5）</td><td><code>AgentNode::matches</code> · <code>match_nodes</code></td><td>可见性 + 能力双过滤</td></tr>
+            <tr><td>信封编解码（185.6）</td><td><code>AipEnvelope::to_json / from_json</code></td><td>版本/协议/kind 校验</td></tr>
+            <tr><td>消息标识</td><td><code>AipEnvelope::message_id</code></td><td><code>sender#seq</code> 单源</td></tr>
+            <tr><td>交互状态机</td><td><code>dispatch</code> · <code>receive</code> · <code>is_registered</code></td><td>单调序号防重放</td></tr>
+            <tr><td>状态观测</td><td><code>outbox_seq</code> · <code>inbox_watermark</code> · <code>peer_urns</code></td><td>发送序号 / 水位 / 对端清单</td></tr>
+            <tr><td>会话（185.6）</td><td><code>AipSession::open / send / recv / close</code></td><td>会话级独立序号空间</td></tr>
+            <tr><td>路由与扇出</td><td><code>RouteTable::resolve</code> · <code>is_member</code> · <code>fanout</code></td><td>群组展开 / 直发 / 拒绝</td></tr>
+            <tr><td>工具调用（185.7）</td><td><code>ToolRegistry::invoke_tool</code> · <code>names</code> · <code>is_registered</code></td><td>调用日志 + MCP 视图</td></tr>
+            <tr><td>统一错误契约</td><td><code>@wire.ProtocolError</code></td><td>part / code / message</td></tr>
+            <tr><td>形式化验证</td><td><code>@verify.clamp_i64 / next_seq / inbox_advance</code></td><td>20 条证明义务</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section" id="quality">
+      <div class="section-head">
+        <p class="kicker">Quality gates</p>
+        <h2>数字可复算</h2>
+        <p class="lede">四目标严格模式零警告；覆盖率、变异与形式化证明均有明确口径，数字附实测日期。</p>
+      </div>
+      <div class="stat-grid">
+        <div class="stat"><strong>124</strong><span>测试（native）</span></div>
+        <div class="stat"><strong>117 × 3</strong><span>js / wasm / wasm-gc</span></div>
+        <div class="stat"><strong>91.8%</strong><span>核心覆盖（811/883）</span></div>
+        <div class="stat"><strong>19 / 19</strong><span>变异点 KILLED</span></div>
+        <div class="stat"><strong>20</strong><span>证明义务</span></div>
+        <div class="stat"><strong>10</strong><span>包（7 分部 + 公共层）</span></div>
+        <div class="stat"><strong>0</strong><span>核心运行时依赖</span></div>
+        <div class="stat"><strong>4</strong><span>编译目标同源</span></div>
+      </div>
+      <div class="quality-notes">
+        <p><strong>覆盖率口径</strong>：native 插桩点 811/883 = 91.8%，排除 <code>transport_async</code>（Windows 路径 bug）、<code>playground</code>、<code>examples</code>；<code>moon coverage report -f full_summary</code> 实测（2026-11-24）。</p>
+        <p><strong>性能实测</strong>：dispatch 122.98 ns、registry_lookup 81.13 ns、envelope 往返 1.56 µs、能力检索（1000 节点 × 8 需求）101.59 µs（native release，2026-11-24）。</p>
+        <p><strong>防重放</strong>：<code>next_seq</code> 与 <code>inbox_advance</code> 由 Z3 证明，并在 <code>dispatch</code> / <code>receive</code> 真实调用；群组扇出各对端序号空间独立。</p>
+        <p><strong>演示口径</strong>：页面所有结果来自 <code>playground</code> 导出（11 个函数），与库同一份源码；发布后另有真实浏览器验收。</p>
+      </div>
+    </section>
+
+    <section class="section" id="docs">
+      <div class="section-head">
+        <p class="kicker">Documentation</p>
+        <h2>继续深入</h2>
+        <p class="lede">架构、性能、对比、评估、迁移、安全与真话台账都写在仓库里。</p>
+      </div>
+      <div class="doc-grid">
+        <a class="doc-card" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/architecture.md"><h3>架构设计</h3><p>十包边界、依赖方向与 `sans-I/O` 分层。</p></a>
+        <a class="doc-card" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/performance.md"><h3>性能报告</h3><p>基准、算法复杂度与剪枝等价性。</p></a>
+        <a class="doc-card" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/comparison.md"><h3>方案对比</h3><p>与手写 JSON / 通用 RPC / 上游仓颉实现的差异。</p></a>
+        <a class="doc-card" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/assessment.md"><h3>立项评估</h3><p>11 维立项自评与风险清单。</p></a>
+        <a class="doc-card" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/proposal.md"><h3>立项建议书</h3><p>目标、范围、里程碑与验收口径。</p></a>
+        <a class="doc-card" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/migration.md"><h3>迁移指南</h3><p>从手写协议/上游实现迁移的步骤。</p></a>
+        <a class="doc-card" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/security.md"><h3>安全说明</h3><p>威胁模型、防重放与凭证边界。</p></a>
+        <a class="doc-card" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/known-gaps.md"><h3>已知边界</h3><p>真话台账：平台限制与未实现项。</p></a>
+        <a class="doc-card" href="https://github.com/walkzzz/gbz185.mbt/blob/main/docs/TEST_REPORT.md"><h3>测试报告</h3><p>测试矩阵、覆盖率、变异与基准。</p></a>
+      </div>
+    </section>
+
+    <section class="section" id="how">
+      <div class="section-head">
+        <p class="kicker">Under the hood</p>
+        <h2>这是怎么在浏览器里跑的？</h2>
+      </div>
+      <ol class="steps">
+        <li><span class="step-no">1</span><p><code>playground/</code> 是根模块的 <code>foreign_library</code> 包，用 <code>#export_name</code> 导出 11 个非 raise 包装函数（错误折叠为 <code>{"ok":false}</code> / false / -1）。</p></li>
+        <li><span class="step-no">2</span><p><code>moon build --target js --release playground</code> 生成一份 JS；同一份源码也可构建为 <code>wasm-gc</code> / <code>native</code>。</p></li>
+        <li><span class="step-no">3</span><p>页面直接 <code>import</code> 并调用：编码、校验、扇出、完整流程、能力/发现匹配、AIC、路由、工具描述全部在本地完成。</p></li>
+        <li><span class="step-no">4</span><p>语义由 <code>verify/</code> 的 20 条证明义务、124 项测试与 19 点变异矩阵守护；<code>check_pages.mjs</code> 验证导出与语义，Pages 部署 <code>docs/</code>。</p></li>
       </ol>
     </section>
   </main>
 
-  <footer>
-    <p>gbz185.mbt · MIT · GB/Z 185-2026 智能体互联</p>
+  <footer class="footer">
+    <div class="footer-inner">
+      <p class="footer-brand"><span class="brand-mark small">185</span> gbz185.mbt · MIT · GB/Z 185-2026 智能体互联 · 零第三方运行时依赖</p>
+      <nav class="footer-links" aria-label="页脚导航">
+        <a href="https://github.com/walkzzz/gbz185.mbt" target="_blank" rel="noreferrer">GitHub</a>
+        <a href="https://mooncakes.io/docs/walkzzz/gbz185.mbt" target="_blank" rel="noreferrer">mooncakes</a>
+        <a href="https://github.com/walkzzz/gbz185.mbt/blob/main/CHANGELOG.md" target="_blank" rel="noreferrer">变更日志</a>
+        <a href="https://github.com/walkzzz/gbz185.mbt/blob/main/CONTRIBUTING.md" target="_blank" rel="noreferrer">参与贡献</a>
+      </nav>
+    </div>
   </footer>
 
   <script type="module" src="app.js"></script>

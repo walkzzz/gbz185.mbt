@@ -227,6 +227,26 @@ pub fn ToolRegistry::lookup(
 }
 
 ///|
+/// 是否已注册（查询不改变注册表）
+pub fn ToolRegistry::is_registered(self : ToolRegistry, name : String) -> Bool {
+  self.tools.get(name) is Some(_)
+}
+
+///|
+/// 工具名清单（shortlex 确定性顺序：MoonBit String Compare 先长度后逐字符；
+/// 未注册顺序无关，便于 MCP tools/list 与运维诊断的稳定输出）
+/// Tool-name list (shortlex deterministic order — MoonBit's String Compare is length-first;
+/// independent of registration order, stable output for MCP tools/list and diagnostics).
+pub fn ToolRegistry::names(self : ToolRegistry) -> Array[String] {
+  let out : Array[String] = []
+  for name, _e in self.tools {
+    out.push(name)
+  }
+  out.sort()
+  out
+}
+
+///|
 /// 描述清单快照（MCP tools/list 的数据源）
 pub fn ToolRegistry::descriptors(self : ToolRegistry) -> Array[ToolDescriptor] {
   let out : Array[ToolDescriptor] = []
@@ -260,7 +280,7 @@ pub fn ToolRegistry::unregister(
   self : ToolRegistry,
   name : String,
 ) -> Unit raise ToolingError {
-  if self.tools.get(name) is None {
+  if !self.is_registered(name) {
     raise UnknownTool(name)
   }
   let _ = self.tools.remove(name)

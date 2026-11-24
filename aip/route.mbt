@@ -105,6 +105,19 @@ pub fn RouteTable::leave(
 }
 
 ///|
+/// 是否群组成员（群组不存在返回 false）
+pub fn RouteTable::is_member(
+  self : RouteTable,
+  group_urn : String,
+  member_urn : String,
+) -> Bool {
+  match self.groups.get(group_urn) {
+    Some(members) => members.contains(member_urn)
+    None => false
+  }
+}
+
+///|
 /// 群组成员清单快照
 pub fn RouteTable::members(
   self : RouteTable,
